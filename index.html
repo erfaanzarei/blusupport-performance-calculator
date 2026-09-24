@@ -811,17 +811,21 @@ function bindInput(id, cb) {
   if (!el) return;
   el.oninput = function() { cb(el.value); };
 }
-
 function onNext() {
-  if (state.step === 0) {
-    if (!state.shiftKey) { showToast("شیفت رو انتخاب کن"); return; }
-    if (!state.hoursPresent) { showToast("ساعت حضور رو وارد کن"); return; }
-    state.step = 1;
-  } else if (state.step === 1) {
-    state.result = computeResult();
-    state.view = "result";
+  try {
+    if (state.step === 0) {
+      if (!state.shiftKey) { showToast("شیفت رو انتخاب کن"); return; }
+      if (!state.hoursPresent) { showToast("ساعت حضور رو وارد کن"); return; }
+      state.step = 1;
+    } else if (state.step === 1) {
+      state.result = computeResult();
+      state.view = "result";
+    }
+    render();
+  } catch(err) {
+    alert("خطا: " + err.message + "\n\n" + err.stack);
   }
-  render();
+}
 }
 
 function onBack() {
