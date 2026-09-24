@@ -5,8 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#4f46e5">
 <title>پرفورمنس پشتیبانی</title>
-<link rel="manifest" id="manifest-link">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%234f46e5'/%3E%3Ctext x='96' y='130' font-size='100' text-anchor='middle' fill='white' font-family='sans-serif'%3E%D8%B4%3C/text%3E%3C/svg%3E">
 <style>
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   :root {
@@ -20,23 +18,17 @@
     margin: 0; padding: 0;
     font-family: 'Vazirmatn', Tahoma, system-ui, -apple-system, sans-serif;
     background: var(--bg); color: var(--text);
-    min-height: 100vh; overscroll-behavior-y: contain;
+    min-height: 100vh;
   }
   #app { max-width: 520px; margin: 0 auto; padding: 14px; padding-bottom: 90px; }
   .header { text-align: center; padding: 12px 0 6px; }
   .header h1 { font-size: 19px; margin: 0 0 4px; }
   .header p { font-size: 12px; color: var(--muted); margin: 0; }
   .progress { display: flex; gap: 6px; margin: 14px 0; }
-  .progress-dot { flex: 1; height: 4px; border-radius: 2px; background: var(--border); transition: background .3s; }
+  .progress-dot { flex: 1; height: 4px; border-radius: 2px; background: var(--border); }
   .progress-dot.active { background: var(--primary); }
   .progress-dot.done { background: var(--success); }
-  .card {
-    background: var(--card); border-radius: var(--radius);
-    padding: 16px; margin-bottom: 12px;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    animation: slideIn .25s ease;
-  }
-  @keyframes slideIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
   .card h2 { font-size: 15px; margin: 0 0 4px; font-weight: 700; }
   .card .hint { font-size: 12px; color: var(--muted); margin: 0 0 12px; }
   label { display: block; font-size: 13px; margin-bottom: 5px; font-weight: 600; }
@@ -44,147 +36,57 @@
     width: 100%; padding: 11px 12px; font-size: 16px;
     border: 1.5px solid var(--border); border-radius: 11px;
     background: #fafafa; color: var(--text); font-family: inherit;
-    transition: border-color .2s;
   }
   input:focus { outline: none; border-color: var(--primary); background: #fff; }
-  input[type="number"] { -moz-appearance: textfield; }
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   .field { margin-bottom: 12px; }
   .field small { display: block; font-size: 11px; color: var(--muted); margin-top: 3px; }
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .shift-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-  .shift-btn {
-    background: #fafafa; border: 2px solid var(--border);
-    border-radius: 12px; padding: 10px 6px; cursor: pointer;
-    text-align: center; font-family: inherit; font-size: 12px;
-    transition: all .2s;
-  }
-  .shift-btn:active { transform: scale(0.97); }
+  .shift-btn { background: #fafafa; border: 2px solid var(--border); border-radius: 12px; padding: 10px 6px; text-align: center; font-family: inherit; font-size: 12px; cursor: pointer; }
   .shift-btn.selected { border-color: var(--primary); background: #eef2ff; color: var(--primary-dark); }
   .shift-btn .name { font-weight: 700; font-size: 13px; display: block; margin-bottom: 2px; }
   .shift-btn .time { font-size: 11px; color: var(--muted); }
-  .shift-btn.selected .time { color: var(--primary); }
-  .btn {
-    display: block; width: 100%; padding: 13px;
-    font-size: 15px; font-weight: 700; font-family: inherit;
-    border: none; border-radius: 13px; cursor: pointer;
-    background: var(--primary); color: #fff; transition: all .2s;
-  }
-  .btn:active { transform: scale(0.98); background: var(--primary-dark); }
-  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn { display: block; width: 100%; padding: 13px; font-size: 15px; font-weight: 700; font-family: inherit; border: none; border-radius: 13px; cursor: pointer; background: var(--primary); color: #fff; }
+  .btn:disabled { opacity: 0.4; }
   .btn.secondary { background: #fff; color: var(--primary); border: 1.5px solid var(--primary); }
   .btn.danger { background: var(--danger); }
   .btn.small { padding: 8px 12px; font-size: 13px; width: auto; display: inline-block; }
   .btn-row { display: flex; gap: 10px; }
   .btn-row .btn { flex: 1; }
-  .result-hero {
-    text-align: center; padding: 22px 16px;
-    background: linear-gradient(135deg, #4f46e5, #7c3aed);
-    color: #fff; border-radius: var(--radius); margin-bottom: 12px;
-  }
+  .result-hero { text-align: center; padding: 22px 16px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: #fff; border-radius: var(--radius); margin-bottom: 12px; }
   .result-hero .pct { font-size: 48px; font-weight: 800; line-height: 1; margin: 6px 0; }
   .result-hero .label { font-size: 13px; opacity: 0.9; }
-  .result-hero .status {
-    display: inline-block; padding: 5px 12px; border-radius: 18px;
-    background: rgba(255,255,255,0.2); font-size: 12px; margin-top: 8px;
-  }
-  .stat-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
-  .stat { background: #fafafa; border-radius: 11px; padding: 10px; text-align: center; }
-  .stat .val { font-size: 18px; font-weight: 800; color: var(--primary); }
-  .stat .lbl { font-size: 11px; color: var(--muted); margin-top: 3px; }
-  .info-row {
-    display: flex; justify-content: space-between;
-    padding: 8px 0; border-bottom: 1px dashed var(--border);
-    font-size: 13px;
-  }
+  .result-hero .status { display: inline-block; padding: 5px 12px; border-radius: 18px; background: rgba(255,255,255,0.2); font-size: 12px; margin-top: 8px; }
+  .info-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 13px; }
   .info-row:last-child { border-bottom: none; }
   .info-row .v { font-weight: 700; }
   .route-grid { display: grid; gap: 8px; margin-bottom: 12px; }
-  .route-btn {
-    background: #fafafa; border: 2px solid var(--border);
-    border-radius: 12px; padding: 13px; cursor: pointer;
-    text-align: right; font-family: inherit; font-size: 14px;
-    font-weight: 600; transition: all .2s;
-    display: flex; align-items: center; gap: 10px;
-  }
-  .route-btn:active { transform: scale(0.98); }
+  .route-btn { background: #fafafa; border: 2px solid var(--border); border-radius: 12px; padding: 13px; text-align: right; font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; }
   .route-btn.selected { border-color: var(--primary); background: #eef2ff; color: var(--primary-dark); }
   .route-btn .icon { font-size: 20px; }
-  .toast {
-    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
-    background: #1f2937; color: #fff; padding: 9px 16px;
-    border-radius: 18px; font-size: 13px; z-index: 100;
-    opacity: 0; transition: opacity .3s; pointer-events: none;
-  }
-  .toast.show { opacity: 1; }
-  .footer {
-    position: fixed; bottom: 0; left: 0; right: 0;
-    background: #fff; border-top: 1px solid var(--border);
-    z-index: 50; padding-bottom: env(safe-area-inset-bottom);
-  }
+  .footer { position: fixed; bottom: 0; left: 0; right: 0; background: #fff; border-top: 1px solid var(--border); z-index: 50; }
   .footer-inner { max-width: 520px; margin: 0 auto; display: flex; }
-  .footer button {
-    flex: 1; padding: 11px; background: none; border: none;
-    font-family: inherit; font-size: 12px; color: var(--muted);
-    cursor: pointer; font-weight: 600;
-  }
+  .footer button { flex: 1; padding: 11px; background: none; border: none; font-family: inherit; font-size: 12px; color: var(--muted); cursor: pointer; font-weight: 600; }
   .footer button.active { color: var(--primary); }
-  .step-title {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 10px;
-  }
+  .step-title { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
   .step-title h2 { font-size: 15px; margin: 0; }
-  .step-title .step-badge {
-    background: #eef2ff; color: var(--primary);
-    font-size: 11px; font-weight: 700;
-    padding: 3px 9px; border-radius: 10px;
-  }
+  .step-title .step-badge { background: #eef2ff; color: var(--primary); font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 10px; }
   .alert { padding: 10px 12px; border-radius: 11px; font-size: 12.5px; margin-bottom: 12px; }
   .alert.info { background: #eef2ff; color: #3730a3; }
   .alert.warn { background: #fef3c7; color: #92400e; }
-  .alert.danger { background: #fee2e2; color: #991b1b; }
-  .alert.ok { background: #d1fae5; color: #065f46; }
-  .target-big {
-    text-align: center; padding: 18px 16px;
-    background: linear-gradient(135deg, #10b981, #059669);
-    color: #fff; border-radius: var(--radius); margin-bottom: 12px;
-  }
+  .target-big { text-align: center; padding: 18px 16px; background: linear-gradient(135deg, #10b981, #059669); color: #fff; border-radius: var(--radius); margin-bottom: 12px; }
   .target-big .num { font-size: 46px; font-weight: 800; line-height: 1; margin: 4px 0; }
   .target-big .lbl { font-size: 14px; opacity: 0.95; }
   .target-big.done { background: linear-gradient(135deg, #f59e0b, #d97706); }
-  .target-big .sub-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 12px; }
-  .target-big .sub-stat { background: rgba(255,255,255,0.2); border-radius: 10px; padding: 8px; text-align: center; }
-  .target-big .sub-stat .v { font-size: 20px; font-weight: 800; }
-  .target-big .sub-stat .l { font-size: 11px; opacity: 0.9; margin-top: 2px; }
-  .user-item {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 10px 0; border-bottom: 1px dashed var(--border);
-    gap: 8px;
-  }
-  .user-item:last-child { border-bottom: none; }
-  .user-item .uname { font-weight: 700; font-size: 14px; }
-  .badge-owner {
-    background: #d1fae5; color: #065f46;
-    padding: 2px 7px; border-radius: 8px;
-    font-size: 10px; font-weight: 700;
-  }
-  .badge-sup {
-    background: #eef2ff; color: #3730a3;
-    padding: 2px 7px; border-radius: 8px;
-    font-size: 10px; font-weight: 700;
-  }
-  .ticket-info {
-    background: #f0fdf4; border: 1px solid #bbf7d0;
-    border-radius: 11px; padding: 10px 12px;
-    font-size: 12px; color: #166534;
-  }
+  .ticket-info { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 11px; padding: 10px 12px; font-size: 12px; color: #166534; }
   .ticket-info b { color: #15803d; }
-  .user-add-grid {
-    background: #fafafa; border-radius: 11px; padding: 12px;
-    margin-top: 10px;
-    border: 1px dashed var(--border);
-  }
+  .user-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed var(--border); gap: 8px; }
+  .user-item .uname { font-weight: 700; font-size: 14px; }
+  .badge-owner { background: #d1fae5; color: #065f46; padding: 2px 7px; border-radius: 8px; font-size: 10px; font-weight: 700; }
+  .badge-sup { background: #eef2ff; color: #3730a3; padding: 2px 7px; border-radius: 8px; font-size: 10px; font-weight: 700; }
+  .user-add-grid { background: #fafafa; border-radius: 11px; padding: 12px; margin-top: 10px; border: 1px dashed var(--border); }
+  .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1f2937; color: #fff; padding: 9px 16px; border-radius: 18px; font-size: 13px; z-index: 100; opacity: 0; transition: opacity .3s; pointer-events: none; }
+  .toast.show { opacity: 1; }
 </style>
 </head>
 <body>
@@ -196,362 +98,3 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
-<script>
-const DEFAULT_CONFIG = {
-  callIn: 120, callOut: 90, chat: 55,
-  ticketEscalation: 10, ticketVerbal: 5,
-  ticketVerbalRatio: 0.85,
-  ticketEscalationRatio: 0.05,
-  factor: 0.875,
-  shifts: {
-    morning:      { name: "صبح",          start: "08:00", end: "16:00" },
-    midMorning9:  { name: "میدل صبح ۹",   start: "09:00", end: "17:00" },
-    midMorning10: { name: "میدل صبح ۱۰",  start: "10:00", end: "18:00" },
-    evening:      { name: "عصر",          start: "16:00", end: "24:00" },
-    midEvening:   { name: "میدل عصر",     start: "18:00", end: "02:00", crossDay: true },
-    night:        { name: "بامداد",       start: "00:00", end: "08:00", crossDay: true }
-  },
-  users: [
-    { username: "e.zarei", password: "Erfan@123", role: "owner" }
-  ],
-  routes: {
-    call:  { label: "فقط تماس",  icon: "📞" },
-    chat:  { label: "فقط چت",    icon: "💬" },
-    mixed: { label: "ترکیبی",    icon: "🔀" }
-  }
-};
-const LS_KEY = "perf_config_v5";
-function loadConfig() {
-  try {
-    const s = JSON.parse(localStorage.getItem(LS_KEY));
-    if (s) return {
-      ...DEFAULT_CONFIG, ...s,
-      shifts: { ...DEFAULT_CONFIG.shifts, ...(s.shifts||{}) },
-      users: Array.isArray(s.users) && s.users.length ? s.users : JSON.parse(JSON.stringify(DEFAULT_CONFIG.users)),
-      routes: { ...DEFAULT_CONFIG.routes, ...(s.routes||{}) }
-    };
-  } catch(e) {}
-  return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-}
-function saveConfig(c) { localStorage.setItem(LS_KEY, JSON.stringify(c)); }
-let CONFIG = loadConfig();
-let state = {
-  view: "main", step: 0,
-  shiftKey: null,
-  hoursPresent: "", taskHours: "", blackoutMin: "",
-  callIn: "", callOut: "", chat: "",
-  result: null, route: null,
-  mixedCalls: "1", mixedChats: "",
-  currentUser: null,
-  adminLoginUser: "", adminLoginPass: "", adminError: "",
-  newUserName: "", newUserPass: "", newUserRole: "supervisor"
-};
-const $ = (s) => document.querySelector(s);
-const toNum = (v) => parseFloat(v) || 0;
-function showToast(msg) {
-  const t = $("#toast");
-  t.textContent = msg; t.classList.add("show");
-  clearTimeout(window._toastT);
-  window._toastT = setTimeout(() => t.classList.remove("show"), 2200);
-}
-function formatDuration(seconds) {
-  seconds = Math.max(0, Math.round(seconds));
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = seconds % 60;
-  if (h > 0) return `${h}س ${m}د`;
-  if (m > 0) return `${m}د`;
-  return `${s}ث`;
-}
-function nowTehran() {
-  const fmt = new Intl.DateTimeFormat("en-US", {
-    timeZone: "Asia/Tehran",
-    year: "numeric", month: "2-digit", day: "2-digit",
-    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
-  });
-  const p = {};
-  fmt.formatToParts(new Date()).forEach(x => p[x.type] = x.value);
-  return { year:+p.year, month:+p.month, day:+p.day, hour:+p.hour, minute:+p.minute, second:+p.second };
-}
-function hmToMin(hm) {
-  const [h, m] = hm.split(":").map(Number);
-  return h * 60 + m;
-}
-function computeTickets(callIn, callOut, chat) {
-  const totalCalls = callIn + callOut;
-  const verbal = Math.round(callIn * CONFIG.ticketVerbalRatio);
-  const escalation = Math.round((totalCalls + chat) * CONFIG.ticketEscalationRatio);
-  return { verbal, escalation };
-}
-function computeResult() {
-  const shift = CONFIG.shifts[state.shiftKey];
-  if (!shift) return null;
-  const hoursPresent = toNum(state.hoursPresent);
-  const taskHours = toNum(state.taskHours);
-  const blackoutMin = toNum(state.blackoutMin);
-  const presentMinTotal = hoursPresent * 60;
-  const taskMin = taskHours * 60;
-  const blackoutMinTotal = blackoutMin;
-  const now = nowTehran();
-  const nowMin = now.hour * 60 + now.minute;
-  const startMin = hmToMin(shift.start);
-  let endMin = hmToMin(shift.end);
-  const isCross = shift.crossDay || endMin <= startMin;
-  if (endMin === 0) endMin = 24 * 60;
-  let elapsedShiftMin = 0, remainShiftMin = 0, shiftState = "active";
-  if (isCross) {
-    if (nowMin >= startMin) {
-      elapsedShiftMin = nowMin - startMin;
-      remainShiftMin = (24 * 60 - startMin) + endMin - elapsedShiftMin;
-    } else if (nowMin < endMin) {
-      elapsedShiftMin = (24 * 60 - startMin) + nowMin;
-      remainShiftMin = Math.max(0, endMin - nowMin);
-    } else {
-      shiftState = "after";
-    }
-  } else {
-    if (nowMin < startMin) {
-      shiftState = "before";
-      remainShiftMin = endMin - startMin;
-    } else if (nowMin >= endMin) {
-      shiftState = "after";
-      elapsedShiftMin = endMin - startMin;
-    } else {
-      elapsedShiftMin = nowMin - startMin;
-      remainShiftMin = endMin - nowMin;
-    }
-  }
-  const totalShiftMin = isCross ? (24 * 60 - startMin) + endMin : (endMin - startMin);
-  let presentElapsedMin = 0, presentRemainMin = 0;
-  if (shiftState === "after") {
-    presentElapsedMin = presentMinTotal;
-    presentRemainMin = 0;
-  } else if (shiftState === "before") {
-    presentElapsedMin = 0;
-    presentRemainMin = presentMinTotal;
-  } else {
-    const ratio = totalShiftMin > 0 ? elapsedShiftMin / totalShiftMin : 0;
-    presentElapsedMin = Math.min(presentMinTotal * ratio, presentMinTotal);
-    presentRemainMin = presentMinTotal - presentElapsedMin;
-  }
-  const elapsedRatio = presentMinTotal > 0 ? presentElapsedMin / presentMinTotal : 0;
-  const taskMinElapsed = taskMin * elapsedRatio;
-  const blackoutMinElapsed = blackoutMinTotal * elapsedRatio;
-  const netElapsedMin = Math.max(0, presentElapsedMin - taskMinElapsed - blackoutMinElapsed);
-  const effectiveElapsedSec = netElapsedMin * 60 * CONFIG.factor;
-  const callIn = toNum(state.callIn);
-  const callOut = toNum(state.callOut);
-  const chat = toNum(state.chat);
-  const tickets = computeTickets(callIn, callOut, chat);
-  const usedSeconds =
-    callIn * CONFIG.callIn +
-    callOut * CONFIG.callOut +
-    chat * CONFIG.chat +
-    tickets.escalation * CONFIG.ticketEscalation +
-    tickets.verbal * CONFIG.ticketVerbal;
-  const perf = effectiveElapsedSec > 0
-    ? (usedSeconds / effectiveElapsedSec) * 100
-    : (usedSeconds > 0 ? 100 : 0);
-  const netTotalMin = Math.max(0, presentMinTotal - taskMin - blackoutMinTotal);
-  const effectiveTotalSec = netTotalMin * 60 * CONFIG.factor;
-  const shiftElapsedPct = totalShiftMin > 0 ? (elapsedShiftMin / totalShiftMin) * 100 : 0;
-  return {
-    shift, hoursPresent, taskHours, blackoutMin,
-    presentMinTotal,
-    effectiveElapsedSec, effectiveTotalSec,
-    usedSeconds, perf, tickets,
-    elapsedShiftMin, remainShiftMin, shiftState, shiftElapsedPct,
-    presentElapsedMin, presentRemainMin,
-    totalShiftMin, isCross
-  };
-}
-function computeForecast() {
-  const r = state.result;
-  if (!r || !state.route) return null;
-  const neededSec = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
-  if (neededSec <= 0) return { type: "done" };
-  if (state.route === "call") {
-    return { type: "call", count: Math.ceil(neededSec / CONFIG.callIn) };
-  }
-  if (state.route === "chat") {
-    return { type: "chat", count: Math.ceil(neededSec / CONFIG.chat) };
-  }
-  if (state.route === "mixed") {
-    const mc = Math.max(0, toNum(state.mixedCalls));
-    const mchat = Math.max(0, toNum(state.mixedChats));
-    const costPer = mc * CONFIG.callIn + mchat * CONFIG.chat;
-    if (costPer <= 0) return { type: "mixed", pairs: 0, calls: 0, chats: 0 };
-    const pairs = Math.ceil(neededSec / costPer);
-    return { type: "mixed", pairs, calls: pairs * mc, chats: pairs * mchat };
-  }
-  return null;
-}
-function render() {
-  const app = $("#app");
-  if (state.view === "main")            app.innerHTML = renderMain();
-  else if (state.view === "result")     app.innerHTML = renderResult();
-  else if (state.view === "adminLogin") app.innerHTML = renderAdminLogin();
-  else if (state.view === "admin")      app.innerHTML = renderAdmin();
-  bindEvents(); updateNav();
-}
-function updateNav() {
-  $("#nav-main").classList.toggle("active", state.view === "main" || state.view === "result");
-  $("#nav-admin").classList.toggle("active", state.view === "admin" || state.view === "adminLogin");
-}
-function renderMain() {
-  const s = state.step;
-  let body = "";
-  if (s === 0) {
-    const nowT = nowTehran();
-    const shifts = Object.entries(CONFIG.shifts);
-    body = `
-      <div class="card">
-        <div class="step-title">
-          <h2>شیفت امروز</h2>
-          <span class="step-badge">۱ از ۳</span>
-        </div>
-        <p class="hint">ساعت تهران الان: ${String(nowT.hour).padStart(2,"0")}:${String(nowT.minute).padStart(2,"0")}</p>
-        <div class="shift-grid">
-          ${shifts.map(([k, v]) => `
-            <button class="shift-btn ${state.shiftKey === k ? "selected" : ""}" data-shift="${k}">
-              <span class="name">${v.name}</span>
-              <span class="time">${v.start} - ${v.end === "24:00" ? "00:00" : v.end}</span>
-            </button>
-          `).join("")}
-        </div>
-      </div>
-      <div class="card">
-        <h2>زمان حضور</h2>
-        <p class="hint">امروز چند ساعت حضور داری؟ (کل شیفت، حتی اگه اضافه کار بمونی)</p>
-        <div class="field">
-          <label>ساعت حضور (ساعت)</label>
-          <input type="number" inputmode="decimal" step="0.25" id="inp-hours" value="${state.hoursPresent}" placeholder="8">
-        </div>
-      </div>
-      <div class="card">
-        <h2>تسک جانبی و قطعی (تا الان)</h2>
-        <p class="hint">تا این لحظه چقدر تسک جانبی یا قطعی داشتی؟</p>
-        <div class="grid2">
-          <div class="field">
-            <label>تسک جانبی (ساعت)</label>
-            <input type="number" inputmode="decimal" step="0.25" id="inp-task" value="${state.taskHours}" placeholder="0">
-          </div>
-          <div class="field">
-            <label>قطعی 🔴 (دقیقه)</label>
-            <input type="number" inputmode="numeric" step="1" id="inp-blackout" value="${state.blackoutMin}" placeholder="0">
-          </div>
-        </div>
-        <small style="color:var(--muted);font-size:11px">این‌ها مستقیم از زمان حضور کم میشن.</small>
-      </div>
-      <button class="btn" id="next-btn" ${(!state.shiftKey || !state.hoursPresent) ? "disabled" : ""}>ادامه ←</button>
-    `;
-  } else if (s === 1) {
-    body = `
-      <div class="card">
-        <div class="step-title">
-          <h2>تماس‌ها و چت</h2>
-          <span class="step-badge">۲ از ۳</span>
-        </div>
-        <p class="hint">تا الان چی کار کردی؟</p>
-        <div class="grid2">
-          <div class="field">
-            <label>📞 تماس ورودی</label>
-            <input type="number" inputmode="numeric" id="inp-call-in" value="${state.callIn}" placeholder="0">
-          </div>
-          <div class="field">
-            <label>📞 تماس خروجی</label>
-            <input type="number" inputmode="numeric" id="inp-call-out" value="${state.callOut}" placeholder="0">
-          </div>
-        </div>
-        <div class="field">
-          <label>💬 چت</label>
-          <input type="number" inputmode="numeric" id="inp-chat" value="${state.chat}" placeholder="0">
-        </div>
-        <div class="ticket-info">
-          🎫 تیکت‌های شفاهی و ارجاعی بر اساس تعداد تماس و چتت <b>خودکار</b> حساب میشن و تو پرفورمنست لحاظ می‌شن.
-        </div>
-      </div>
-      <div class="btn-row">
-        <button class="btn secondary" id="back-btn">← قبلی</button>
-        <button class="btn" id="next-btn">محاسبه ✓</button>
-      </div>
-    `;
-  }
-  const progressHtml = `
-    <div class="progress">
-      ${[0,1,2].map(i => `<div class="progress-dot ${i < s ? "done" : i === s ? "active" : ""}"></div>`).join("")}
-    </div>
-  `;
-  return `
-    <div class="header">
-      <h1>محاسبه پرفورمنس</h1>
-      <p>پشتیبانی — ${new Date().toLocaleDateString("fa-IR")}</p>
-    </div>
-    ${progressHtml}
-    ${body}
-  `;
-}
-function renderResult() {
-  const r = state.result;
-  if (!r) return `<div class="card"><p>خطا</p></div>`;
-  const perfPct = r.perf.toFixed(1);
-  let statusText = "";
-  if (r.perf >= 100) statusText = "عالی! از هدف هم گذشتی 🎉";
-  else if (r.perf >= 95) statusText = "فوق العاده! 🎉";
-  else if (r.perf >= 80) statusText = "خوبی، ادامه بده 💪";
-  else if (r.perf >= 60) statusText = "متوسط — قابل جبران";
-  else statusText = "عقب‌تری — باید جبران کنی";
-  const elapsedStr = formatDuration(r.elapsedShiftMin * 60);
-  const remainStr = formatDuration(r.remainShiftMin * 60);
-  let shiftAlert = "";
-  if (r.shiftState === "before")
-    shiftAlert = `<div class="alert info">⏳ شیفتت هنوز شروع نشده.</div>`;
-  else if (r.shiftState === "after")
-    shiftAlert = `<div class="alert warn">⏰ شیفتت تموم شده.</div>`;
-  const routeButtons = Object.entries(CONFIG.routes).map(([k, v]) => `
-    <button class="route-btn ${state.route === k ? "selected" : ""}" data-route="${k}">
-      <span class="icon">${v.icon}</span>
-      <span>${v.label}</span>
-    </button>
-  `).join("");
-  let mixedInputs = "";
-  if (state.route === "mixed") {
-    const calls = Math.max(1, toNum(state.mixedCalls) || 1);
-    const autoChats = Math.round(calls * (CONFIG.callIn / CONFIG.chat));
-    state.mixedChats = String(autoChats);
-    mixedInputs = `
-      <div class="card">
-        <h2>ترکیب دلخواه</h2>
-        <p class="hint">در هر دور چند تا تماس می‌خوای بزنی؟</p>
-        <div class="field">
-          <label>📞 تعداد تماس در هر دور</label>
-          <input type="number" inputmode="numeric" id="inp-mixed-calls" value="${state.mixedCalls}" placeholder="1">
-        </div>
-        <div class="field">
-          <label>💬 تعداد چت در هر دور (خودکار)</label>
-          <input type="text" value="${autoChats}" readonly style="background:#eef2ff;color:var(--primary);font-weight:700">
-          <small>به نسبت زمان هر تماس به چت</small>
-        </div>
-      </div>
-    `;
-  }
-  let forecastHtml = "";
-  const f = computeForecast();
-  if (f) {
-    if (f.type === "done") {
-      forecastHtml = `
-        <div class="target-big done">
-          <div class="lbl">🎉 به هدف رسیدی</div>
-          <div class="num">۱۰۰٪</div>
-          <div class="lbl" style="font-size:12px;opacity:0.9">فقط همین رو حفظ کن</div>
-        </div>
-      `;
-    } else if (f.type === "call") {
-      forecastHtml = `
-        <div class="target-big">
-          <div class="lbl">📞 برای رسیدن به ۱۰۰٪</div>
-          <div class="num">${f.count}</div>
-          <div class="lbl">تماس ورودی دیگه بزن</div>
-        </div>
-      `;
-    } else if (f.type === "chat") {
