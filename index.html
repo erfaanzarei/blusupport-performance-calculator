@@ -315,13 +315,20 @@ function computeForecast() {
   }
 
   if (state.route === "mixed") {
-    var mc = Math.max(0, toNum(state.mixedCalls));
-    var mchat = Math.max(0, toNum(state.mixedChats));
-    var costPerPair = mc * inCost + mchat * chatCost;
-    if (costPerPair <= 0) return { type: "mixed", pairs: 0, calls: 0, chats: 0 };
-    var pairs = Math.ceil(neededSec / costPerPair);
-    return { type: "mixed", pairs: pairs, calls: pairs * mc, chats: pairs * mchat };
+  var callsWanted = Math.max(0, toNum(state.mixedCalls));
+  if (callsWanted <= 0) return { type: "mixed", calls: 0, chats: 0, overshoot: false };
+
+  var callsCost = callsWanted * inCost;
+
+  if (callsCost >= neededSec) {
+    return { type: "mixed", calls: callsWanted, chats: 0, overshoot: true };
   }
+
+  var remainingAfterCalls = neededSec - callsCost;
+  var chatsNeeded = Math.ceil(remainingAfterCalls / chatCost);
+
+  return { type: "mixed", calls: callsWanted, chats: chatsNeeded, overshoot: false };
+}
 
   return null;
 }
