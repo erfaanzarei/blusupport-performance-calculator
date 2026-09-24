@@ -646,3 +646,189 @@ function renderAdmin() {
 
     (isOwner ? '<button class="btn danger" id="admin-reset" style="margin-top:10px">بازگشت به پیش‌فرض</button>' : '');
 }
+
+function bindEvents() {
+  document.getElementById("nav-main").onclick = function() { state.view = "main"; render(); };
+  document.getElementById("nav-admin").onclick = function() {
+    state.view = state.currentUser ? "admin" : "adminLogin";
+    render();
+  };
+
+  var shiftBtns = document.querySelectorAll("[data-shift]");
+  for (var i = 0; i < shiftBtns.length; i++) {
+    (function(btn) {
+      btn.onclick = function() { state.shiftKey = btn.getAttribute("data-shift"); render(); };
+    })(shiftBtns[i]);
+  }
+
+  var nb = document.getElementById("next-btn");
+  if (nb) nb.onclick = onNext;
+  var bb = document.getElementById("back-btn");
+  if (bb) bb.onclick = onBack;
+
+  bindInput("inp-hours", function(v) { state.hoursPresent = v; });
+  bindInput("inp-task", function(v) { state.taskHours = v; });
+  bindInput("inp-blackout", function(v) { state.blackoutMin = v; });
+  bindInput("inp-call-in", function(v) { state.callIn = v; });
+  bindInput("inp-call-out", function(v) { state.callOut = v; });
+  bindInput("inp-chat", function(v) { state.chat = v; });
+  bindInput("inp-mixed-calls", function(v) { state.mixedCalls = v; render(); });
+
+  var routeBtns = document.querySelectorAll("[data-route]");
+  for (var r = 0; r < routeBtns.length; r++) {
+    (function(btn) {
+      btn.onclick = function() { state.route = btn.getAttribute("data-route"); render(); };
+    })(routeBtns[r]);
+  }
+
+  var restart = document.getElementById("restart-btn");
+  if (restart) restart.onclick = function() {
+    state.step = 0;
+    state.shiftKey = null;
+    state.hoursPresent = "";
+    state.taskHours = "";
+    state.blackoutMin = "";
+    state.callIn = "";
+    state.callOut = "";
+    state.chat = "";
+    state.result = null;
+    state.route = null;
+    state.mixedCalls = "1";
+    state.mixedChats = "";
+    state.view = "main";
+    render();
+  };
+
+  var al = document.getElementById("admin-login-btn");
+  if (al) al.onclick = function() {
+    var u = document.getElementById("inp-admin-user").value.trim();
+    var p = document.getElementById("inp-admin-pass").value;
+    var found = null;
+    for (var i = 0; i < CONFIG.users.length; i++) {
+      if (CONFIG.users[i].username === u && CONFIG.users[i].password === p) {
+        found = CONFIG.users[i]; break;
+      }
+    }
+    if (found) {
+      state.currentUser = { username: found.username, role: found.role };
+      state.adminError = "";
+      state.view = "admin";
+      render();
+    } else {
+      state.adminError = "نام کاربری یا رمز اشتباه است";
+      render();
+    }
+  };
+  bindInput("inp-admin-user", function(v) { state.adminLoginUser = v; });
+  bindInput("inp-admin-pass", function(v) { state.adminLoginPass = v; });
+
+  var as = document.getElementById("admin-save");
+  if (as) as.onclick = function() {
+    var nc = JSON.parse(JSON.stringify(CONFIG));
+    nc.callIn = toNum(document.getElementById("cfg-callIn").value);
+    nc.callOut = toNum(document.getElementById("cfg-callOut").value);
+    nc.chat = toNum(document.getElementById("cfg-chat").value);
+    nc.ticketEscalation = toNum(document.getElementById("cfg-te").value);
+    nc.ticketVerbal = toNum(document.getElementById("cfg-tv").value);
+    nc.ticketVerbalRatio = parseFloat(document.getElementById("cfg-tvRatio").value) || 0.85;
+    nc.ticketEscalationRatio = parseFloat(document.getElementById("cfg-teRatio").value) || 0.05;
+    nc.factor = parseFloat(document.getElementById("cfg-factor").value) || 0.875;
+
+    var starts = document.querySelectorAll("[data-shift-start]");
+    for (var i = 0; i < starts.length; i++) {
+      var k = starts[i].getAttribute("data-shift-start");
+      nc.shifts[k].start = starts[i].value;
+    }
+    var ends = document.querySelectorAll("[data-shift-end]");
+    for (var j = 0; j < ends.length; j++) {
+      var k2 = ends[j].getAttribute("data-shift-end");
+      var val = ends[j].value === "00:00" ? "24:00" : ends[j].value;
+      nc.shifts[k2].end = val;
+    }
+    CONFIG = nc;
+    saveConfig(CONFIG);
+    showToast("ذخیره شد ✓");
+  };
+
+  var lo = document.getElementById("admin-logout");
+  if (lo) lo.onclick = function() {
+    state.currentUser = null;
+    state.adminLoginUser = "";
+    state.adminLoginPass = "";
+    state.view = "main";
+    render();
+  };
+
+  var ar = document.getElementById("admin-reset");
+  if (ar) ar.onclick = function() {
+    if (confirm("همه تنظیمات به پیش‌فرض برگرده؟")) {
+      CONFIG = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+      saveConfig(CONFIG);
+      state.currentUser = null;
+      state.view = "main";
+      render();
+      showToast("بازنشانی شد");
+    }
+  };
+
+  bindInput("new-user-name", function(v) { state.newUserName = v; });
+  bindInput("new-user-pass", function(v) { state.newUserPass = v; });
+  var ab = document.getElementById("add-user-btn");
+  if (ab) ab.onclick = function() {
+    var u = state.newUserName.trim();
+    var p = state.newUserPass;
+    if (!u || !p) { showToast("نام کاربری و رمز رو پر کن"); return; }
+    for (var i = 0; i < CONFIG.users.length; i++) {
+      if (CONFIG.users[i].username === u) { showToast("این نام کاربری قبلاً هست"); return; }
+    }
+    CONFIG.users.push({ username: u, password: p, role: "supervisor" });
+    saveConfig(CONFIG);
+    state.newUserName = "";
+    state.newUserPass = "";
+    showToast("سرپرست اضافه شد ✓");
+    render();
+  };
+
+  var delBtns = document.querySelectorAll("[data-del-user]");
+  for (var d = 0; d < delBtns.length; d++) {
+    (function(btn) {
+      btn.onclick = function() {
+        var idx = parseInt(btn.getAttribute("data-del-user"), 10);
+        if (CONFIG.users[idx].role === "owner") { showToast("مالک قابل حذف نیست"); return; }
+        if (confirm("کاربر " + CONFIG.users[idx].username + " حذف بشه؟")) {
+          CONFIG.users.splice(idx, 1);
+          saveConfig(CONFIG);
+          showToast("حذف شد");
+          render();
+        }
+      };
+    })(delBtns[d]);
+  }
+}
+
+function bindInput(id, cb) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  el.oninput = function() { cb(el.value); };
+}
+
+function onNext() {
+  if (state.step === 0) {
+    if (!state.shiftKey) { showToast("شیفت رو انتخاب کن"); return; }
+    if (!state.hoursPresent) { showToast("ساعت حضور رو وارد کن"); return; }
+    state.step = 1;
+  } else if (state.step === 1) {
+    state.result = computeResult();
+    state.view = "result";
+  }
+  render();
+}
+
+function onBack() {
+  if (state.step > 0) { state.step--; render(); }
+}
+
+render();
+</script>
+</body>
+</html>
