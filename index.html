@@ -492,24 +492,16 @@ function renderResult() {
   }
 
   var mixedInputs = "";
-  if (state.route === "mixed") {
-    var calls = Math.max(1, toNum(state.mixedCalls) || 1);
-    var autoChats = Math.round(calls * (CONFIG.callIn / CONFIG.chat));
-    state.mixedChats = String(autoChats);
-    mixedInputs = '<div class="card">' +
-        '<h2>ترکیب دلخواه</h2>' +
-        '<p class="hint">در هر دور چند تا تماس می‌خوای بزنی؟</p>' +
-        '<div class="field">' +
-          '<label>📞 تعداد تماس در هر دور</label>' +
-          '<input type="number" inputmode="numeric" id="inp-mixed-calls" value="' + state.mixedCalls + '" placeholder="1">' +
-        '</div>' +
-        '<div class="field">' +
-          '<label>💬 تعداد چت در هر دور (خودکار)</label>' +
-          '<input type="text" value="' + autoChats + '" readonly style="background:#eef2ff;color:var(--primary);font-weight:700">' +
-          '<small>به نسبت زمان هر تماس به چت</small>' +
-        '</div>' +
-      '</div>';
-  }
+if (state.route === "mixed") {
+  mixedInputs = '<div class="card">' +
+      '<h2>🔀 ترکیبی</h2>' +
+      '<p class="hint">چند تا تماس می‌خوای بزنی؟ سیستم می‌گه چقدر چت لازم داری.</p>' +
+      '<div class="field">' +
+        '<label>📞 تعداد تماس</label>' +
+        '<input type="number" inputmode="numeric" id="inp-mixed-calls" value="' + state.mixedCalls + '" placeholder="مثلاً ۵۰">' +
+      '</div>' +
+    '</div>';
+}
 
   var forecastHtml = "";
 var f = computeForecast();
