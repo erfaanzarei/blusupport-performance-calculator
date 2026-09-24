@@ -823,6 +823,64 @@ function bindEvents() {
     render();
   };
 
+ // ذخیره نام شیفت‌ها وقتی ادمین تایپ می‌کنه
+  var shiftNames = document.querySelectorAll("[data-shift-name]");
+  for (var sn = 0; sn < shiftNames.length; sn++) {
+    (function(inp) {
+      inp.oninput = function() {
+        var k = inp.getAttribute("data-shift-name");
+        if (CONFIG.shifts[k]) CONFIG.shifts[k].name = inp.value;
+        saveConfig(CONFIG);
+      };
+    })(shiftNames[sn]);
+  }
+
+  // ذخیره crossDay برای شیفت‌ها
+  var shiftCrosses = document.querySelectorAll("[data-shift-cross]");
+  for (var sc = 0; sc < shiftCrosses.length; sc++) {
+    (function(inp) {
+      inp.onchange = function() {
+        var k = inp.getAttribute("data-shift-cross");
+        if (CONFIG.shifts[k]) CONFIG.shifts[k].crossDay = inp.checked;
+        saveConfig(CONFIG);
+      };
+    })(shiftCrosses[sc]);
+  }
+
+  // افزودن شیفت جدید
+  var addShiftBtn = document.getElementById("add-shift-btn");
+  if (addShiftBtn) addShiftBtn.onclick = function() {
+    var name = document.getElementById("new-shift-name").value.trim();
+    var start = document.getElementById("new-shift-start").value;
+    var end = document.getElementById("new-shift-end").value;
+    var cross = document.getElementById("new-shift-cross").checked;
+
+    if (!name) { showToast("نام شیفت رو وارد کن"); return; }
+    if (!start || !end) { showToast("ساعت شروع و پایان رو وارد کن"); return; }
+
+    var newKey = "custom_" + Date.now();
+    CONFIG.shifts[newKey] = { name: name, start: start, end: end, crossDay: cross };
+    saveConfig(CONFIG);
+    showToast("شیفت اضافه شد ✓");
+    render();
+  };
+
+  // حذف شیفت‌های کاستوم
+  var delShiftBtns = document.querySelectorAll("[data-del-shift]");
+  for (var ds = 0; ds < delShiftBtns.length; ds++) {
+    (function(btn) {
+      btn.onclick = function() {
+        var k = btn.getAttribute("data-del-shift");
+        if (confirm("شیفت «" + (CONFIG.shifts[k] ? CONFIG.shifts[k].name : k) + "» حذف بشه؟")) {
+          delete CONFIG.shifts[k];
+          saveConfig(CONFIG);
+          showToast("شیفت حذف شد");
+          render();
+        }
+      };
+    })(delShiftBtns[ds]);
+  }
+
   var ar = document.getElementById("admin-reset");
   if (ar) ar.onclick = function() {
     if (confirm("همه تنظیمات به پیش‌فرض برگرده؟")) {
