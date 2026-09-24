@@ -629,6 +629,20 @@ for (var i = 0; i < keys.length; i++) {
       '</div>' +
     '</div>';
 }
+ shiftsHtml += '<div class="user-add-grid" style="margin-top:12px">' +
+    '<div style="font-weight:700;font-size:13px;margin-bottom:8px">➕ افزودن شیفت جدید</div>' +
+    '<div class="field"><label>نام شیفت</label><input type="text" id="new-shift-name" placeholder="مثلاً شیفت شب"></div>' +
+    '<div class="grid2">' +
+      '<div class="field"><label>شروع</label><input type="time" id="new-shift-start" value="08:00"></div>' +
+      '<div class="field"><label>پایان</label><input type="time" id="new-shift-end" value="16:00"></div>' +
+    '</div>' +
+    '<div class="field">' +
+      '<label style="display:flex;align-items:center;gap:6px">' +
+        '<input type="checkbox" id="new-shift-cross"> شیفت به روز بعد می‌رسه' +
+      '</label>' +
+    '</div>' +
+    '<button class="btn" id="add-shift-btn" style="margin-top:6px">افزودن شیفت</button>' +
+  '</div>';
 
   var usersHtml = "";
   if (isOwner) {
