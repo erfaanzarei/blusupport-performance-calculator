@@ -538,26 +538,27 @@ if (f) {
           '✨ با احتساب تیکت‌های ارجاعی که خودکار ثبت می‌شن' +
         '</div>' +
       '</div>';
-  } else if (f.type === "mixed") {
-    forecastHtml = '<div class="target-big">' +
-        '<div class="lbl">🔀 برای رسیدن به ۱۰۰٪</div>' +
-        '<div class="num">' + f.pairs + '</div>' +
-        '<div class="lbl">دور ترکیبی بزن</div>' +
+} else if (f.type === "mixed") {
+  if (f.overshoot) {
+    forecastHtml = '<div class="target-big done">' +
+        '<div class="lbl">🎉 با همین تماس‌ها به هدف می‌رسی</div>' +
+        '<div class="num">' + f.calls + '</div>' +
+        '<div class="lbl">تماس کافیه، چت لازم نیست</div>' +
         '<div class="sub-note">' +
           '✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار ثبت می‌شن' +
         '</div>' +
-        '<div class="stat-grid" style="margin-top:12px">' +
-          '<div class="stat" style="background:rgba(255,255,255,0.2)">' +
-            '<div class="val" style="color:#fff">' + f.calls + '</div>' +
-            '<div class="lbl" style="color:rgba(255,255,255,0.85)">تماس کل</div>' +
-          '</div>' +
-          '<div class="stat" style="background:rgba(255,255,255,0.2)">' +
-            '<div class="val" style="color:#fff">' + f.chats + '</div>' +
-            '<div class="lbl" style="color:rgba(255,255,255,0.85)">چت کل</div>' +
-          '</div>' +
+      '</div>';
+  } else {
+    forecastHtml = '<div class="target-big">' +
+        '<div class="lbl">🔀 با ' + f.calls + ' تماس</div>' +
+        '<div class="num">' + f.chats + '</div>' +
+        '<div class="lbl">چت دیگه بزن تا ۱۰۰٪ بشی</div>' +
+        '<div class="sub-note">' +
+          '✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار ثبت می‌شن' +
         '</div>' +
       '</div>';
   }
+}
 }
 
   var heroStyle = isPositive
