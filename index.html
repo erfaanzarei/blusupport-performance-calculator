@@ -188,4 +188,461 @@ function hmToMin(hm) {
   const parts = hm.split(":");
   return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 }
-</script>
+ 
+function computeResult() {
+  var shift = CONFIG.shifts[state.shiftKey];
+  if (!shift) return null;
+
+  var hoursPresent = toNum(state.hoursPresent);
+  var taskHours = toNum(state.taskHours);
+  var blackoutMin = toNum(state.blackoutMin);
+
+  var presentMinTotal = hoursPresent * 60;
+  var taskMin = taskHours * 60;
+  var blackoutMinTotal = blackoutMin;
+
+  var now = nowTehran();
+  var nowMin = now.hour * 60 + now.minute;
+  var startMin = hmToMin(shift.start);
+  var endMin = hmToMin(shift.end);
+  var isCross = shift.crossDay || endMin <= startMin;
+  if (endMin === 0) endMin = 24 * 60;
+
+  var elapsedShiftMin = 0, remainShiftMin = 0, shiftState = "active";
+
+  if (isCross) {
+    if (nowMin >= startMin) {
+      elapsedShiftMin = nowMin - startMin;
+      remainShiftMin = (24 * 60 - startMin) + endMin - elapsedShiftMin;
+    } else if (nowMin < endMin) {
+      elapsedShiftMin = (24 * 60 - startMin) + nowMin;
+      remainShiftMin = Math.max(0, endMin - nowMin);
+    } else {
+      shiftState = "after";
+    }
+  } else {
+    if (nowMin < startMin) {
+      shiftState = "before";
+      remainShiftMin = endMin - startMin;
+    } else if (nowMin >= endMin) {
+      shiftState = "after";
+      elapsedShiftMin = endMin - startMin;
+    } else {
+      elapsedShiftMin = nowMin - startMin;
+      remainShiftMin = endMin - nowMin;
+    }
+  }
+
+  var totalShiftMin = isCross ? (24 * 60 - startMin) + endMin : (endMin - startMin);
+
+  var presentElapsedMin = 0, presentRemainMin = 0;
+  if (shiftState === "after") {
+    presentElapsedMin = presentMinTotal;
+    presentRemainMin = 0;
+  } else if (shiftState === "before") {
+    presentElapsedMin = 0;
+    presentRemainMin = presentMinTotal;
+  } else {
+    var ratio = totalShiftMin > 0 ? elapsedShiftMin / totalShiftMin : 0;
+    presentElapsedMin = Math.min(presentMinTotal * ratio, presentMinTotal);
+    presentRemainMin = presentMinTotal - presentElapsedMin;
+  }
+
+  var elapsedRatio = presentMinTotal > 0 ? presentElapsedMin / presentMinTotal : 0;
+  var taskMinElapsed = taskMin * elapsedRatio;
+  var blackoutMinElapsed = blackoutMinTotal * elapsedRatio;
+
+  var netElapsedMin = Math.max(0, presentElapsedMin - taskMinElapsed - blackoutMinElapsed);
+  var effectiveElapsedSec = netElapsedMin * 60 * CONFIG.factor;
+
+  var callIn = toNum(state.callIn);
+  var callOut = toNum(state.callOut);
+  var chat = toNum(state.chat);
+  var tickets = computeTickets(callIn, callOut, chat);
+
+  var usedSeconds =
+    callIn * CONFIG.callIn +
+    callOut * CONFIG.callOut +
+    chat * CONFIG.chat +
+    tickets.escalation * CONFIG.ticketEscalation +
+    tickets.verbal * CONFIG.ticketVerbal;
+
+  var perf = effectiveElapsedSec > 0
+    ? (usedSeconds / effectiveElapsedSec) * 100
+    : (usedSeconds > 0 ? 100 : 0);
+
+  var netTotalMin = Math.max(0, presentMinTotal - taskMin - blackoutMinTotal);
+  var effectiveTotalSec = netTotalMin * 60 * CONFIG.factor;
+
+  var shiftElapsedPct = totalShiftMin > 0 ? (elapsedShiftMin / totalShiftMin) * 100 : 0;
+
+  return {
+    shift: shift, hoursPresent: hoursPresent, taskHours: taskHours, blackoutMin: blackoutMin,
+    presentMinTotal: presentMinTotal,
+    effectiveElapsedSec: effectiveElapsedSec, effectiveTotalSec: effectiveTotalSec,
+    usedSeconds: usedSeconds, perf: perf, tickets: tickets,
+    elapsedShiftMin: elapsedShiftMin, remainShiftMin: remainShiftMin,
+    shiftState: shiftState, shiftElapsedPct: shiftElapsedPct,
+    presentElapsedMin: presentElapsedMin, presentRemainMin: presentRemainMin,
+    totalShiftMin: totalShiftMin, isCross: isCross
+  };
+}
+
+function computeForecast() {
+  var r = state.result;
+  if (!r || !state.route) return null;
+
+  var neededSec = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
+  if (neededSec <= 0) return { type: "done" };
+
+  if (state.route === "call") {
+    return { type: "call", count: Math.ceil(neededSec / CONFIG.callIn) };
+  }
+  if (state.route === "chat") {
+    return { type: "chat", count: Math.ceil(neededSec / CONFIG.chat) };
+  }
+  if (state.route === "mixed") {
+    var mc = Math.max(0, toNum(state.mixedCalls));
+    var mchat = Math.max(0, toNum(state.mixedChats));
+    var costPer = mc * CONFIG.callIn + mchat * CONFIG.chat;
+    if (costPer <= 0) return { type: "mixed", pairs: 0, calls: 0, chats: 0 };
+    var pairs = Math.ceil(neededSec / costPer);
+    return { type: "mixed", pairs: pairs, calls: pairs * mc, chats: pairs * mchat };
+  }
+  return null;
+}
+
+function render() {
+  var app = document.getElementById("app");
+  if (state.view === "main")            app.innerHTML = renderMain();
+  else if (state.view === "result")     app.innerHTML = renderResult();
+  else if (state.view === "adminLogin") app.innerHTML = renderAdminLogin();
+  else if (state.view === "admin")      app.innerHTML = renderAdmin();
+  bindEvents();
+  updateNav();
+}
+
+function updateNav() {
+  document.getElementById("nav-main").classList.toggle("active", state.view === "main" || state.view === "result");
+  document.getElementById("nav-admin").classList.toggle("active", state.view === "admin" || state.view === "adminLogin");
+}
+
+function renderMain() {
+  var s = state.step;
+  var body = "";
+  var esc = function(x) { return x || ""; };
+
+  if (s === 0) {
+    var nowT = nowTehran();
+    var shifts = Object.keys(CONFIG.shifts).map(function(k) { return [k, CONFIG.shifts[k]]; });
+    var shiftBtns = "";
+    for (var i = 0; i < shifts.length; i++) {
+      var k = shifts[i][0], v = shifts[i][1];
+      var sel = state.shiftKey === k ? " selected" : "";
+      var endShow = v.end === "24:00" ? "00:00" : v.end;
+      shiftBtns += '<button class="shift-btn' + sel + '" data-shift="' + k + '">' +
+        '<span class="name">' + v.name + '</span>' +
+        '<span class="time">' + v.start + ' - ' + endShow + '</span>' +
+        '</button>';
+    }
+    var nh = String(nowT.hour); if (nh.length < 2) nh = "0" + nh;
+    var nm = String(nowT.minute); if (nm.length < 2) nm = "0" + nm;
+
+    body = '<div class="card">' +
+        '<div class="step-title">' +
+          '<h2>شیفت امروز</h2>' +
+          '<span class="step-badge">۱ از ۳</span>' +
+        '</div>' +
+        '<p class="hint">ساعت تهران الان: ' + nh + ':' + nm + '</p>' +
+        '<div class="shift-grid">' + shiftBtns + '</div>' +
+      '</div>' +
+      '<div class="card">' +
+        '<h2>زمان حضور</h2>' +
+        '<p class="hint">امروز چند ساعت حضور داری؟ (کل شیفت، حتی اگه اضافه کار بمونی)</p>' +
+        '<div class="field">' +
+          '<label>ساعت حضور (ساعت)</label>' +
+          '<input type="number" inputmode="decimal" step="0.25" id="inp-hours" value="' + esc(state.hoursPresent) + '" placeholder="8">' +
+        '</div>' +
+      '</div>' +
+      '<div class="card">' +
+        '<h2>تسک جانبی و قطعی (تا الان)</h2>' +
+        '<p class="hint">تا این لحظه چقدر تسک جانبی یا قطعی داشتی؟</p>' +
+        '<div class="grid2">' +
+          '<div class="field">' +
+            '<label>تسک جانبی (ساعت)</label>' +
+            '<input type="number" inputmode="decimal" step="0.25" id="inp-task" value="' + esc(state.taskHours) + '" placeholder="0">' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>قطعی 🔴 (دقیقه)</label>' +
+            '<input type="number" inputmode="numeric" step="1" id="inp-blackout" value="' + esc(state.blackoutMin) + '" placeholder="0">' +
+          '</div>' +
+        '</div>' +
+        '<small style="color:var(--muted);font-size:11px">این‌ها مستقیم از زمان حضور کم میشن.</small>' +
+      '</div>';
+
+    var dis = (!state.shiftKey || !state.hoursPresent) ? " disabled" : "";
+    body += '<button class="btn" id="next-btn"' + dis + '>ادامه ←</button>';
+  } else if (s === 1) {
+    body = '<div class="card">' +
+        '<div class="step-title">' +
+          '<h2>تماس‌ها و چت</h2>' +
+          '<span class="step-badge">۲ از ۳</span>' +
+        '</div>' +
+        '<p class="hint">تا الان چی کار کردی؟</p>' +
+        '<div class="grid2">' +
+          '<div class="field">' +
+            '<label>📞 تماس ورودی</label>' +
+            '<input type="number" inputmode="numeric" id="inp-call-in" value="' + esc(state.callIn) + '" placeholder="0">' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>📞 تماس خروجی</label>' +
+            '<input type="number" inputmode="numeric" id="inp-call-out" value="' + esc(state.callOut) + '" placeholder="0">' +
+          '</div>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>💬 چت</label>' +
+          '<input type="number" inputmode="numeric" id="inp-chat" value="' + esc(state.chat) + '" placeholder="0">' +
+        '</div>' +
+        '<div class="ticket-info">' +
+          '🎫 تیکت‌های شفاهی و ارجاعی بر اساس تعداد تماس و چتت <b>خودکار</b> حساب میشن و تو پرفورمنست لحاظ می‌شن.' +
+        '</div>' +
+      '</div>' +
+      '<div class="btn-row">' +
+        '<button class="btn secondary" id="back-btn">← قبلی</button>' +
+        '<button class="btn" id="next-btn">محاسبه ✓</button>' +
+      '</div>';
+  }
+
+  var dots = "";
+  for (var j = 0; j < 3; j++) {
+    var cls = j < s ? "done" : (j === s ? "active" : "");
+    dots += '<div class="progress-dot ' + cls + '"></div>';
+  }
+
+  return '<div class="header">' +
+      '<h1>محاسبه پرفورمنس</h1>' +
+      '<p>پشتیبانی — ' + new Date().toLocaleDateString("fa-IR") + '</p>' +
+    '</div>' +
+    '<div class="progress">' + dots + '</div>' +
+    body;
+}
+
+function renderResult() {
+  var r = state.result;
+  if (!r) return '<div class="card"><p>خطا</p></div>';
+
+  var perfPct = r.perf.toFixed(1);
+  var statusText = "";
+  if (r.perf >= 100) statusText = "عالی! از هدف هم گذشتی 🎉";
+  else if (r.perf >= 95) statusText = "فوق العاده! 🎉";
+  else if (r.perf >= 80) statusText = "خوبی، ادامه بده 💪";
+  else if (r.perf >= 60) statusText = "متوسط — قابل جبران";
+  else statusText = "عقب‌تری — باید جبران کنی";
+
+  var elapsedStr = formatDuration(r.elapsedShiftMin * 60);
+  var remainStr = formatDuration(r.remainShiftMin * 60);
+
+  var shiftAlert = "";
+  if (r.shiftState === "before")
+    shiftAlert = '<div class="alert info">⏳ شیفتت هنوز شروع نشده.</div>';
+  else if (r.shiftState === "after")
+    shiftAlert = '<div class="alert warn">⏰ شیفتت تموم شده.</div>';
+
+  var routeButtons = "";
+  var routeKeys = Object.keys(CONFIG.routes);
+  for (var i = 0; i < routeKeys.length; i++) {
+    var rk = routeKeys[i];
+    var rv = CONFIG.routes[rk];
+    var sel = state.route === rk ? " selected" : "";
+    routeButtons += '<button class="route-btn' + sel + '" data-route="' + rk + '">' +
+      '<span class="icon">' + rv.icon + '</span>' +
+      '<span>' + rv.label + '</span>' +
+      '</button>';
+  }
+
+  var mixedInputs = "";
+  if (state.route === "mixed") {
+    var calls = Math.max(1, toNum(state.mixedCalls) || 1);
+    var autoChats = Math.round(calls * (CONFIG.callIn / CONFIG.chat));
+    state.mixedChats = String(autoChats);
+    mixedInputs = '<div class="card">' +
+        '<h2>ترکیب دلخواه</h2>' +
+        '<p class="hint">در هر دور چند تا تماس می‌خوای بزنی؟</p>' +
+        '<div class="field">' +
+          '<label>📞 تعداد تماس در هر دور</label>' +
+          '<input type="number" inputmode="numeric" id="inp-mixed-calls" value="' + state.mixedCalls + '" placeholder="1">' +
+        '</div>' +
+        '<div class="field">' +
+          '<label>💬 تعداد چت در هر دور (خودکار)</label>' +
+          '<input type="text" value="' + autoChats + '" readonly style="background:#eef2ff;color:var(--primary);font-weight:700">' +
+          '<small>به نسبت زمان هر تماس به چت</small>' +
+        '</div>' +
+      '</div>';
+  }
+
+  var forecastHtml = "";
+  var f = computeForecast();
+  if (f) {
+    if (f.type === "done") {
+      forecastHtml = '<div class="target-big done">' +
+          '<div class="lbl">🎉 به هدف رسیدی</div>' +
+          '<div class="num">۱۰۰٪</div>' +
+          '<div class="lbl" style="font-size:12px;opacity:0.9">فقط همین رو حفظ کن</div>' +
+        '</div>';
+    } else if (f.type === "call") {
+      forecastHtml = '<div class="target-big">' +
+          '<div class="lbl">📞 برای رسیدن به ۱۰۰٪</div>' +
+          '<div class="num">' + f.count + '</div>' +
+          '<div class="lbl">تماس ورودی دیگه بزن</div>' +
+        '</div>';
+    } else if (f.type === "chat") {
+      forecastHtml = '<div class="target-big">' +
+          '<div class="lbl">💬 برای رسیدن به ۱۰۰٪</div>' +
+          '<div class="num">' + f.count + '</div>' +
+          '<div class="lbl">چت دیگه بزن</div>' +
+        '</div>';
+    } else if (f.type === "mixed") {
+      forecastHtml = '<div class="target-big">' +
+          '<div class="lbl">🔀 برای رسیدن به ۱۰۰٪</div>' +
+          '<div class="num">' + f.pairs + '</div>' +
+          '<div class="lbl">دور ترکیبی بزن</div>' +
+          '<div class="stat-grid" style="margin-top:12px">' +
+            '<div class="stat" style="background:rgba(255,255,255,0.2)">' +
+              '<div class="val" style="color:#fff">' + f.calls + '</div>' +
+              '<div class="lbl" style="color:rgba(255,255,255,0.85)">تماس کل</div>' +
+            '</div>' +
+            '<div class="stat" style="background:rgba(255,255,255,0.2)">' +
+              '<div class="val" style="color:#fff">' + f.chats + '</div>' +
+              '<div class="lbl" style="color:rgba(255,255,255,0.85)">چت کل</div>' +
+            '</div>' +
+          '</div>' +
+        '</div>';
+    }
+  }
+
+  return '<div class="header">' +
+      '<h1>نتیجه پرفورمنس</h1>' +
+      '<p>' + r.shift.name + ' • ' + r.shift.start + ' تا ' + (r.shift.end === "24:00" ? "00:00" : r.shift.end) + '</p>' +
+    '</div>' +
+    shiftAlert +
+    '<div class="result-hero">' +
+      '<div class="label">پرفورمنس فعلی</div>' +
+      '<div class="pct">' + perfPct + '٪</div>' +
+      '<div class="status">' + statusText + '</div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<h2>⏱ وضعیت شیفت</h2>' +
+      '<div class="info-row"><span>سپری‌شده از شیفت</span><span class="v">' + elapsedStr + ' <span style="color:var(--muted);font-weight:400">(' + r.shiftElapsedPct.toFixed(0) + '٪)</span></span></div>' +
+      '<div class="info-row"><span>باقیمونده تا پایان</span><span class="v">' + remainStr + '</span></div>' +
+      '<div class="info-row"><span>زمان مفید تا الان</span><span class="v">' + formatDuration(r.effectiveElapsedSec) + '</span></div>' +
+      '<div class="info-row"><span>زمان مصرفی</span><span class="v">' + formatDuration(r.usedSeconds) + '</span></div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<h2>🎫 تیکت‌های محاسبه‌شده</h2>' +
+      '<p class="hint">به‌صورت خودکار از تعداد تماس و چتت حساب شدن.</p>' +
+      '<div class="info-row"><span>تیکت شفاهی</span><span class="v">' + r.tickets.verbal + ' تا</span></div>' +
+      '<div class="info-row"><span>تیکت ارجاعی</span><span class="v">' + r.tickets.escalation + ' تا</span></div>' +
+    '</div>' +
+    '<div class="card">' +
+      '<h2>🎯 می‌خوای با چی به پرفورمنس برسی؟</h2>' +
+      '<p class="hint">یه مسیر انتخاب کن.</p>' +
+      '<div class="route-grid">' + routeButtons + '</div>' +
+    '</div>' +
+    mixedInputs +
+    forecastHtml +
+    '<div class="btn-row" style="margin-top:12px">' +
+      '<button class="btn secondary" id="restart-btn">شروع دوباره</button>' +
+    '</div>';
+}
+
+function renderAdminLogin() {
+  return '<div class="header"><h1>ورود به تنظیمات</h1><p>مخصوص سرپرستان</p></div>' +
+    '<div class="card">' +
+      '<div class="field"><label>نام کاربری</label><input type="text" id="inp-admin-user" value="' + (state.adminLoginUser || "") + '" autocomplete="username"></div>' +
+      '<div class="field"><label>رمز عبور</label><input type="password" id="inp-admin-pass" value="' + (state.adminLoginPass || "") + '" autocomplete="current-password"></div>' +
+      (state.adminError ? '<p style="color:var(--danger);font-size:13px;margin:0 0 10px">' + state.adminError + '</p>' : "") +
+      '<button class="btn" id="admin-login-btn">ورود</button>' +
+    '</div>';
+}
+
+function renderAdmin() {
+  var c = CONFIG;
+  var isOwner = state.currentUser && state.currentUser.role === "owner";
+
+  var shiftsHtml = "";
+  var keys = Object.keys(c.shifts);
+  for (var i = 0; i < keys.length; i++) {
+    var k = keys[i], v = c.shifts[k];
+    var endVal = v.end === "24:00" ? "00:00" : v.end;
+    shiftsHtml += '<div style="padding:8px 0;border-bottom:1px dashed var(--border)">' +
+        '<div style="font-weight:700;font-size:13px;margin-bottom:6px">' + v.name + '</div>' +
+        '<div class="grid2">' +
+          '<div class="field" style="margin:0"><label style="font-size:11px">شروع</label><input type="time" data-shift-start="' + k + '" value="' + v.start + '"></div>' +
+          '<div class="field" style="margin:0"><label style="font-size:11px">پایان</label><input type="time" data-shift-end="' + k + '" value="' + endVal + '"></div>' +
+        '</div>' +
+      '</div>';
+  }
+
+  var usersHtml = "";
+  if (isOwner) {
+    for (var u = 0; u < c.users.length; u++) {
+      var uu = c.users[u];
+      var badge = uu.role === "owner"
+        ? '<span class="badge-owner">مالک</span>'
+        : '<span class="badge-sup">سرپرست</span>';
+      var delBtn = uu.role !== "owner"
+        ? '<button class="btn danger small" data-del-user="' + u + '">حذف</button>'
+        : '';
+      usersHtml += '<div class="user-item">' +
+          '<div class="uname">' + uu.username + ' ' + badge + '</div>' +
+          delBtn +
+        '</div>';
+    }
+  }
+
+  return '<div class="header"><h1>⚙️ تنظیمات</h1><p>' + (state.currentUser ? state.currentUser.username : "") + (isOwner ? " (مالک)" : " (سرپرست)") + '</p></div>' +
+
+    '<div class="card">' +
+      '<h2>ثانیه‌های هر کنش</h2>' +
+      '<div class="grid2">' +
+        '<div class="field"><label>تماس ورودی</label><input type="number" id="cfg-callIn" value="' + c.callIn + '"></div>' +
+        '<div class="field"><label>تماس خروجی</label><input type="number" id="cfg-callOut" value="' + c.callOut + '"></div>' +
+        '<div class="field"><label>چت</label><input type="number" id="cfg-chat" value="' + c.chat + '"></div>' +
+        '<div class="field"><label>تیکت ارجاعی</label><input type="number" id="cfg-te" value="' + c.ticketEscalation + '"></div>' +
+        '<div class="field"><label>تیکت شفاهی</label><input type="number" id="cfg-tv" value="' + c.ticketVerbal + '"></div>' +
+        '<div class="field"><label>ضریب (factor)</label><input type="number" step="0.001" id="cfg-factor" value="' + c.factor + '"></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<h2>نسبت تیکت‌ها</h2>' +
+      '<div class="grid2">' +
+        '<div class="field"><label>ضریب تیکت شفاهی</label><input type="number" step="0.01" id="cfg-tvRatio" value="' + c.ticketVerbalRatio + '"><small>پیش‌فرض 0.85</small></div>' +
+        '<div class="field"><label>ضریب تیکت ارجاعی</label><input type="number" step="0.01" id="cfg-teRatio" value="' + c.ticketEscalationRatio + '"><small>پیش‌فرض 0.05</small></div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="card">' +
+      '<h2>شیفت‌ها</h2>' +
+      shiftsHtml +
+    '</div>' +
+
+    (isOwner ? '<div class="card">' +
+      '<h2>👥 مدیریت سرپرستان</h2>' +
+      '<p class="hint">فقط مالک می‌تونه کاربر اضافه یا حذف کنه.</p>' +
+      usersHtml +
+      '<div class="user-add-grid">' +
+        '<div style="font-weight:700;font-size:13px;margin-bottom:8px">➕ افزودن سرپرست جدید</div>' +
+        '<div class="field"><label>نام کاربری</label><input type="text" id="new-user-name" value="' + (state.newUserName || "") + '"></div>' +
+        '<div class="field"><label>رمز عبور</label><input type="text" id="new-user-pass" value="' + (state.newUserPass || "") + '"></div>' +
+        '<button class="btn" id="add-user-btn" style="margin-top:6px">افزودن سرپرست</button>' +
+      '</div>' +
+    '</div>' : '') +
+
+    '<div class="btn-row">' +
+      '<button class="btn secondary" id="admin-logout">خروج</button>' +
+      '<button class="btn" id="admin-save">ذخیره ✓</button>' +
+    '</div>' +
+
+    (isOwner ? '<button class="btn danger" id="admin-reset" style="margin-top:10px">بازگشت به پیش‌فرض</button>' : '');
+}
