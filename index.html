@@ -276,23 +276,27 @@ function computeResult() {
     isCross: isCross
   };
 }
- function computeForecast() {
+function computeForecast() {
   var r = state.result;
   if (!r || !state.route) return null;
 
   var neededSec = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
   if (neededSec <= 0) return { type: "done" };
 
+  var inCost = CONFIG.callIn + (CONFIG.ticketVerbalRatio * CONFIG.ticketVerbal) + (CONFIG.ticketEscalationRatio * CONFIG.ticketEscalation);
+  var outCost = CONFIG.callOut + (CONFIG.ticketEscalationRatio * CONFIG.ticketEscalation);
+  var chatCost = CONFIG.chat + (CONFIG.ticketEscalationRatio * CONFIG.ticketEscalation);
+
   if (state.route === "call") {
-    return { type: "call", count: Math.ceil(neededSec / CONFIG.callIn) };
+    return { type: "call", count: Math.ceil(neededSec / inCost) };
   }
   if (state.route === "chat") {
-    return { type: "chat", count: Math.ceil(neededSec / CONFIG.chat) };
+    return { type: "chat", count: Math.ceil(neededSec / chatCost) };
   }
   if (state.route === "mixed") {
     var mc = Math.max(0, toNum(state.mixedCalls));
     var mchat = Math.max(0, toNum(state.mixedChats));
-    var costPer = mc * CONFIG.callIn + mchat * CONFIG.chat;
+    var costPer = mc * inCost + mchat * chatCost;
     if (costPer <= 0) return { type: "mixed", pairs: 0, calls: 0, chats: 0 };
     var pairs = Math.ceil(neededSec / costPer);
     return { type: "mixed", pairs: pairs, calls: pairs * mc, chats: pairs * mchat };
