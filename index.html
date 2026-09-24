@@ -98,3 +98,94 @@
   </div>
 </div>
 <div class="toast" id="toast"></div>
+
+<script>
+const DEFAULT_CONFIG = {
+  callIn: 120, callOut: 90, chat: 55,
+  ticketEscalation: 10, ticketVerbal: 5,
+  ticketVerbalRatio: 0.85,
+  ticketEscalationRatio: 0.05,
+  factor: 0.875,
+  shifts: {
+    morning:      { name: "صبح",          start: "08:00", end: "16:00" },
+    midMorning9:  { name: "میدل صبح ۹",   start: "09:00", end: "17:00" },
+    midMorning10: { name: "میدل صبح ۱۰",  start: "10:00", end: "18:00" },
+    evening:      { name: "عصر",          start: "16:00", end: "24:00" },
+    midEvening:   { name: "میدل عصر",     start: "18:00", end: "02:00", crossDay: true },
+    night:        { name: "بامداد",       start: "00:00", end: "08:00", crossDay: true }
+  },
+  users: [
+    { username: "e.zarei", password: "Erfan@123", role: "owner" }
+  ],
+  routes: {
+    call:  { label: "فقط تماس",  icon: "📞" },
+    chat:  { label: "فقط چت",    icon: "💬" },
+    mixed: { label: "ترکیبی",    icon: "🔀" }
+  }
+};
+
+const LS_KEY = "perf_config_v5";
+
+function loadConfig() {
+  try {
+    const s = JSON.parse(localStorage.getItem(LS_KEY));
+    if (s) return Object.assign({}, DEFAULT_CONFIG, s, {
+      shifts: Object.assign({}, DEFAULT_CONFIG.shifts, s.shifts || {}),
+      users: Array.isArray(s.users) && s.users.length ? s.users : JSON.parse(JSON.stringify(DEFAULT_CONFIG.users)),
+      routes: Object.assign({}, DEFAULT_CONFIG.routes, s.routes || {})
+    });
+  } catch(e) {}
+  return JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+}
+
+function saveConfig(c) { localStorage.setItem(LS_KEY, JSON.stringify(c)); }
+let CONFIG = loadConfig();
+
+let state = {
+  view: "main", step: 0,
+  shiftKey: null,
+  hoursPresent: "", taskHours: "", blackoutMin: "",
+  callIn: "", callOut: "", chat: "",
+  result: null, route: null,
+  mixedCalls: "1", mixedChats: "",
+  currentUser: null,
+  adminLoginUser: "", adminLoginPass: "", adminError: "",
+  newUserName: "", newUserPass: "", newUserRole: "supervisor"
+};
+
+function $(s) { return document.querySelector(s); }
+function toNum(v) { return parseFloat(v) || 0; }
+
+function showToast(msg) {
+  const t = document.getElementById("toast");
+  t.textContent = msg; t.classList.add("show");
+  clearTimeout(window._toastT);
+  window._toastT = setTimeout(function() { t.classList.remove("show"); }, 2200);
+}
+
+function formatDuration(seconds) {
+  seconds = Math.max(0, Math.round(seconds));
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return h + "س " + m + "د";
+  if (m > 0) return m + "د";
+  return s + "ث";
+}
+
+function nowTehran() {
+  const fmt = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Asia/Tehran",
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false
+  });
+  const p = {};
+  fmt.formatToParts(new Date()).forEach(function(x) { p[x.type] = x.value; });
+  return { year: +p.year, month: +p.month, day: +p.day, hour: +p.hour, minute: +p.minute, second: +p.second };
+}
+
+function hmToMin(hm) {
+  const parts = hm.split(":");
+  return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+}
+</script>
