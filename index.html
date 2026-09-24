@@ -239,24 +239,14 @@ function computeResult() {
   }
 
   var totalShiftMin = isCross ? (24 * 60 - startMin) + endMin : (endMin - startMin);
+  var shiftElapsedPct = totalShiftMin > 0 ? (elapsedShiftMin / totalShiftMin) * 100 : 0;
 
-  var presentElapsedMin = 0, presentRemainMin = 0;
-  if (shiftState === "after") {
-    presentElapsedMin = presentMinTotal;
-    presentRemainMin = 0;
-  } else if (shiftState === "before") {
-    presentElapsedMin = 0;
-    presentRemainMin = presentMinTotal;
-  } else {
-    var ratio = totalShiftMin > 0 ? elapsedShiftMin / totalShiftMin : 0;
-    presentElapsedMin = Math.min(presentMinTotal * ratio, presentMinTotal);
-    presentRemainMin = presentMinTotal - presentElapsedMin;
-  }
+  var netTotalMin = Math.max(0, presentMinTotal - taskMin - blackoutMinTotal);
+  var effectiveTotalSec = netTotalMin * 60 * CONFIG.factor;
 
-  var elapsedRatio = presentMinTotal > 0 ? presentElapsedMin / presentMinTotal : 0;
-  var taskMinElapsed = taskMin * elapsedRatio;
-  var blackoutMinElapsed = blackoutMinTotal * elapsedRatio;
-
+  var presentElapsedMin = presentMinTotal * (shiftElapsedPct / 100);
+  var taskMinElapsed = taskMin * (shiftElapsedPct / 100);
+  var blackoutMinElapsed = blackoutMinTotal * (shiftElapsedPct / 100);
   var netElapsedMin = Math.max(0, presentElapsedMin - taskMinElapsed - blackoutMinElapsed);
   var effectiveElapsedSec = netElapsedMin * 60 * CONFIG.factor;
 
@@ -272,28 +262,29 @@ function computeResult() {
     tickets.escalation * CONFIG.ticketEscalation +
     tickets.verbal * CONFIG.ticketVerbal;
 
-  var perf = effectiveElapsedSec > 0
-    ? (usedSeconds / effectiveElapsedSec) * 100
-    : (usedSeconds > 0 ? 100 : 0);
-
-  var netTotalMin = Math.max(0, presentMinTotal - taskMin - blackoutMinTotal);
-  var effectiveTotalSec = netTotalMin * 60 * CONFIG.factor;
-
-  var shiftElapsedPct = totalShiftMin > 0 ? (elapsedShiftMin / totalShiftMin) * 100 : 0;
+  var perf = effectiveTotalSec > 0 ? (usedSeconds / effectiveTotalSec) * 100 : 0;
+  var diff = perf - shiftElapsedPct;
 
   return {
     shift: shift, hoursPresent: hoursPresent, taskHours: taskHours, blackoutMin: blackoutMin,
     presentMinTotal: presentMinTotal,
-    effectiveElapsedSec: effectiveElapsedSec, effectiveTotalSec: effectiveTotalSec,
-    usedSeconds: usedSeconds, perf: perf, tickets: tickets,
-    elapsedShiftMin: elapsedShiftMin, remainShiftMin: remainShiftMin,
-    shiftState: shiftState, shiftElapsedPct: shiftElapsedPct,
-    presentElapsedMin: presentElapsedMin, presentRemainMin: presentRemainMin,
-    totalShiftMin: totalShiftMin, isCross: isCross
+    effectiveElapsedSec: effectiveElapsedSec,
+    effectiveTotalSec: effectiveTotalSec,
+    usedSeconds: usedSeconds,
+    perf: perf,
+    tickets: tickets,
+    elapsedShiftMin: elapsedShiftMin,
+    remainShiftMin: remainShiftMin,
+    shiftState: shiftState,
+    shiftElapsedPct: shiftElapsedPct,
+    presentElapsedMin: presentElapsedMin,
+    presentRemainMin: presentMinTotal - presentElapsedMin,
+    totalShiftMin: totalShiftMin,
+    isCross: isCross,
+    diff: diff
   };
 }
-
-function computeForecast() {
+ function computeForecast() {
   var r = state.result;
   if (!r || !state.route) return null;
 
@@ -437,12 +428,15 @@ function renderResult() {
   if (!r) return '<div class="card"><p>خطا</p></div>';
 
   var perfPct = r.perf.toFixed(1);
+  var timePct = r.shiftElapsedPct.toFixed(0);
+  var diffPct = r.diff.toFixed(1);
+
   var statusText = "";
-  if (r.perf >= 100) statusText = "عالی! از هدف هم گذشتی 🎉";
-  else if (r.perf >= 95) statusText = "فوق العاده! 🎉";
-  else if (r.perf >= 80) statusText = "خوبی، ادامه بده 💪";
-  else if (r.perf >= 60) statusText = "متوسط — قابل جبران";
-  else statusText = "عقب‌تری — باید جبران کنی";
+  if (r.perf >= 100) statusText = "🎉 به هدف رسیدی!";
+  else if (r.diff >= 5) statusText = "✅ خیلی جلوتری";
+  else if (r.diff >= 0) statusText = "👍 جلوتری";
+  else if (r.diff >= -10) statusText = "⚠️ کمی عقب‌تری";
+  else statusText = "🔴 عقب‌تری — باید جبران کنی";
 
   var elapsedStr = formatDuration(r.elapsedShiftMin * 60);
   var remainStr = formatDuration(r.remainShiftMin * 60);
@@ -525,22 +519,25 @@ function renderResult() {
     }
   }
 
+  var diffColor = r.diff >= 0 ? "var(--success)" : "var(--danger)";
+  var diffSign = r.diff >= 0 ? "+" : "";
+
   return '<div class="header">' +
       '<h1>نتیجه پرفورمنس</h1>' +
       '<p>' + r.shift.name + ' • ' + r.shift.start + ' تا ' + (r.shift.end === "24:00" ? "00:00" : r.shift.end) + '</p>' +
     '</div>' +
     shiftAlert +
     '<div class="result-hero">' +
-      '<div class="label">پرفورمنس فعلی</div>' +
+      '<div class="label">پرفورمنس کل روز</div>' +
       '<div class="pct">' + perfPct + '٪</div>' +
       '<div class="status">' + statusText + '</div>' +
     '</div>' +
     '<div class="card">' +
-      '<h2>⏱ وضعیت شیفت</h2>' +
-      '<div class="info-row"><span>سپری‌شده از شیفت</span><span class="v">' + elapsedStr + ' <span style="color:var(--muted);font-weight:400">(' + r.shiftElapsedPct.toFixed(0) + '٪)</span></span></div>' +
+      '<h2>⏱ وضعیت</h2>' +
+      '<div class="info-row"><span>سپری‌شده از شیفت</span><span class="v">' + elapsedStr + ' <span style="color:var(--muted);font-weight:400">(' + timePct + '٪)</span></span></div>' +
       '<div class="info-row"><span>باقیمونده تا پایان</span><span class="v">' + remainStr + '</span></div>' +
-      '<div class="info-row"><span>زمان مفید تا الان</span><span class="v">' + formatDuration(r.effectiveElapsedSec) + '</span></div>' +
-      '<div class="info-row"><span>زمان مصرفی</span><span class="v">' + formatDuration(r.usedSeconds) + '</span></div>' +
+      '<div class="info-row"><span>پرفورمنس فعلی</span><span class="v">' + perfPct + '٪</span></div>' +
+      '<div class="info-row"><span>اختلاف با زمان</span><span class="v" style="color:' + diffColor + '">' + diffSign + diffPct + '٪</span></div>' +
     '</div>' +
     '<div class="card">' +
       '<h2>🎫 تیکت‌های محاسبه‌شده</h2>' +
