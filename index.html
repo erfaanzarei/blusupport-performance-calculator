@@ -188,7 +188,12 @@ function hmToMin(hm) {
   const parts = hm.split(":");
   return parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
 }
- 
+ function computeTickets(callIn, callOut, chat) {
+  var totalCalls = callIn + callOut;
+  var verbal = Math.round(callIn * CONFIG.ticketVerbalRatio);
+  var escalation = Math.round((totalCalls + chat) * CONFIG.ticketEscalationRatio);
+  return { verbal: verbal, escalation: escalation };
+}
 function computeResult() {
   var shift = CONFIG.shifts[state.shiftKey];
   if (!shift) return null;
