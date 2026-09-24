@@ -112,7 +112,7 @@ const DEFAULT_CONFIG = {
     midMorning10: { name: "میدل صبح ۱۰",  start: "10:00", end: "18:00" },
     evening:      { name: "عصر",          start: "16:00", end: "24:00" },
     midEvening:   { name: "میدل عصر",     start: "18:00", end: "02:00", crossDay: true },
-    night:        { name: "بامداد",       start: "00:00", end: "08:00", crossDay: true }
+   night:        { name: "بامداد",       start: "00:00", end: "08:00" }
   },
   users: [
     { username: "e.zarei", password: "Erfan@123", role: "owner" }
@@ -124,7 +124,7 @@ const DEFAULT_CONFIG = {
   }
 };
 
-const LS_KEY = "perf_config_v5";
+const LS_KEY = "perf_config_v6";
 
 function loadConfig() {
   try {
@@ -239,16 +239,9 @@ function computeResult() {
   }
 
   var totalShiftMin = isCross ? (24 * 60 - startMin) + endMin : (endMin - startMin);
-  var shiftElapsedPct = totalShiftMin > 0 ? (elapsedShiftMin / totalShiftMin) * 100 : 0;
 
   var netTotalMin = Math.max(0, presentMinTotal - taskMin - blackoutMinTotal);
   var effectiveTotalSec = netTotalMin * 60 * CONFIG.factor;
-
-  var presentElapsedMin = presentMinTotal * (shiftElapsedPct / 100);
-  var taskMinElapsed = taskMin * (shiftElapsedPct / 100);
-  var blackoutMinElapsed = blackoutMinTotal * (shiftElapsedPct / 100);
-  var netElapsedMin = Math.max(0, presentElapsedMin - taskMinElapsed - blackoutMinElapsed);
-  var effectiveElapsedSec = netElapsedMin * 60 * CONFIG.factor;
 
   var callIn = toNum(state.callIn);
   var callOut = toNum(state.callOut);
@@ -263,25 +256,24 @@ function computeResult() {
     tickets.verbal * CONFIG.ticketVerbal;
 
   var perf = effectiveTotalSec > 0 ? (usedSeconds / effectiveTotalSec) * 100 : 0;
-  var diff = perf - shiftElapsedPct;
+  var diffFrom100 = perf - 100;
 
   return {
-    shift: shift, hoursPresent: hoursPresent, taskHours: taskHours, blackoutMin: blackoutMin,
+    shift: shift,
+    hoursPresent: hoursPresent,
+    taskHours: taskHours,
+    blackoutMin: blackoutMin,
     presentMinTotal: presentMinTotal,
-    effectiveElapsedSec: effectiveElapsedSec,
     effectiveTotalSec: effectiveTotalSec,
     usedSeconds: usedSeconds,
     perf: perf,
+    diffFrom100: diffFrom100,
     tickets: tickets,
     elapsedShiftMin: elapsedShiftMin,
     remainShiftMin: remainShiftMin,
     shiftState: shiftState,
-    shiftElapsedPct: shiftElapsedPct,
-    presentElapsedMin: presentElapsedMin,
-    presentRemainMin: presentMinTotal - presentElapsedMin,
     totalShiftMin: totalShiftMin,
-    isCross: isCross,
-    diff: diff
+    isCross: isCross
   };
 }
  function computeForecast() {
@@ -428,15 +420,8 @@ function renderResult() {
   if (!r) return '<div class="card"><p>خطا</p></div>';
 
   var perfPct = r.perf.toFixed(1);
-  var timePct = r.shiftElapsedPct.toFixed(0);
-  var diffPct = r.diff.toFixed(1);
-
-  var statusText = "";
-  if (r.perf >= 100) statusText = "🎉 به هدف رسیدی!";
-  else if (r.diff >= 5) statusText = "✅ خیلی جلوتری";
-  else if (r.diff >= 0) statusText = "👍 جلوتری";
-  else if (r.diff >= -10) statusText = "⚠️ کمی عقب‌تری";
-  else statusText = "🔴 عقب‌تری — باید جبران کنی";
+  var diffPct = r.diffFrom100.toFixed(1);
+  var isPositive = r.perf >= 100;
 
   var elapsedStr = formatDuration(r.elapsedShiftMin * 60);
   var remainStr = formatDuration(r.remainShiftMin * 60);
@@ -446,6 +431,20 @@ function renderResult() {
     shiftAlert = '<div class="alert info">⏳ شیفتت هنوز شروع نشده.</div>';
   else if (r.shiftState === "after")
     shiftAlert = '<div class="alert warn">⏰ شیفتت تموم شده.</div>';
+
+  var statusText = "";
+  if (isPositive) {
+    statusText = "🎉 دمت گرم، پرفورمنس روز رو زدی!";
+  } else {
+    statusText = "🔴 " + Math.abs(diffPct) + "٪ عقب‌تری";
+  }
+
+  var bonusMessage = "";
+  if (isPositive) {
+    bonusMessage = '<div class="alert ok" style="font-size:13px;line-height:1.8">' +
+        '✨ قطعاً پرفورمنس مثبت‌تر، موجب دریافت بونس و پیشرفت کاری بیشتره 💪' +
+      '</div>';
+  }
 
   var routeButtons = "";
   var routeKeys = Object.keys(CONFIG.routes);
@@ -519,25 +518,25 @@ function renderResult() {
     }
   }
 
-  var diffColor = r.diff >= 0 ? "var(--success)" : "var(--danger)";
-  var diffSign = r.diff >= 0 ? "+" : "";
+  var heroStyle = isPositive
+    ? "background: linear-gradient(135deg, #10b981, #059669);"
+    : "background: linear-gradient(135deg, #ef4444, #dc2626);";
 
   return '<div class="header">' +
       '<h1>نتیجه پرفورمنس</h1>' +
       '<p>' + r.shift.name + ' • ' + r.shift.start + ' تا ' + (r.shift.end === "24:00" ? "00:00" : r.shift.end) + '</p>' +
     '</div>' +
     shiftAlert +
-    '<div class="result-hero">' +
+    '<div class="result-hero" style="' + heroStyle + '">' +
       '<div class="label">پرفورمنس کل روز</div>' +
       '<div class="pct">' + perfPct + '٪</div>' +
       '<div class="status">' + statusText + '</div>' +
     '</div>' +
+    bonusMessage +
     '<div class="card">' +
-      '<h2>⏱ وضعیت</h2>' +
-      '<div class="info-row"><span>سپری‌شده از شیفت</span><span class="v">' + elapsedStr + ' <span style="color:var(--muted);font-weight:400">(' + timePct + '٪)</span></span></div>' +
-      '<div class="info-row"><span>باقیمونده تا پایان</span><span class="v">' + remainStr + '</span></div>' +
-      '<div class="info-row"><span>پرفورمنس فعلی</span><span class="v">' + perfPct + '٪</span></div>' +
-      '<div class="info-row"><span>اختلاف با زمان</span><span class="v" style="color:' + diffColor + '">' + diffSign + diffPct + '٪</span></div>' +
+      '<h2>⏱ وضعیت شیفت</h2>' +
+      '<div class="info-row"><span>سپری‌شده از شیفت</span><span class="v">' + elapsedStr + '</span></div>' +
+      '<div class="info-row"><span>باقی‌مونده تا پایان</span><span class="v">' + remainStr + '</span></div>' +
     '</div>' +
     '<div class="card">' +
       '<h2>🎫 تیکت‌های محاسبه‌شده</h2>' +
@@ -546,8 +545,8 @@ function renderResult() {
       '<div class="info-row"><span>تیکت ارجاعی</span><span class="v">' + r.tickets.escalation + ' تا</span></div>' +
     '</div>' +
     '<div class="card">' +
-      '<h2>🎯 می‌خوای با چی به پرفورمنس برسی؟</h2>' +
-      '<p class="hint">یه مسیر انتخاب کن.</p>' +
+      '<h2>🎯 می‌خوای با چی به ۱۰۰٪ برسی؟</h2>' +
+      '<p class="hint">یه مسیر انتخاب کن تا بگم چقدر کار لازمه.</p>' +
       '<div class="route-grid">' + routeButtons + '</div>' +
     '</div>' +
     mixedInputs +
