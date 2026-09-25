@@ -488,8 +488,14 @@ function renderResult() {
     shiftAlert = '<div class="alert warn">⏰ شیفتت تموم شده.</div>';
 
   var statusText = "";
-  if (isPositive) {
+  if (r.perf >= 100) {
     statusText = "🎉 دمت گرم، پرفورمنس روز رو زدی!";
+  } else if (r.perf >= 90) {
+    statusText = "👏 خیلی نزدیک به هدفی — بزن به هدف!";
+  } else if (r.perf >= 85) {
+    statusText = "💪 یه کم مونده — بجنگ!";
+  } else if (r.perf >= 80) {
+    statusText = "⚠️ عقب‌تری — باید جبران کنی";
   } else {
     statusText = "🔴 " + Math.abs(diffPct) + "٪ عقب‌تری";
   }
@@ -575,9 +581,18 @@ if (f) {
 }
 }
 
-  var heroStyle = isPositive
-    ? "background: linear-gradient(135deg, #10b981, #059669);"
-    : "background: linear-gradient(135deg, #ef4444, #dc2626);";
+var heroStyle = "";
+  if (r.perf >= 100) {
+    heroStyle = "background: linear-gradient(135deg, #10b981, #059669);";
+  } else if (r.perf >= 90) {
+    heroStyle = "background: linear-gradient(135deg, #6ee7b7, #34d399);";
+  } else if (r.perf >= 85) {
+    heroStyle = "background: linear-gradient(135deg, #fca5a5, #f87171);";
+  } else if (r.perf >= 80) {
+    heroStyle = "background: linear-gradient(135deg, #ef4444, #dc2626);";
+  } else {
+    heroStyle = "background: linear-gradient(135deg, #991b1b, #7f1d1d);";
+  }
 
   return '<div class="header">' +
       '<h1>نتیجه پرفورمنس</h1>' +
