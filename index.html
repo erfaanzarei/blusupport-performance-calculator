@@ -151,6 +151,22 @@ function loadConfig() {
 
 function saveConfig(c) { localStorage.setItem(LS_KEY, JSON.stringify(c)); }
 let CONFIG = loadConfig();
+ function addLog(action, details) {
+  if (!CONFIG.logs) CONFIG.logs = [];
+  var user = state.currentUser ? state.currentUser.username : "ناشناس";
+  var t = nowTehran();
+  var dateStr = t.year + "/" + String(t.month).padStart(2, "0") + "/" + String(t.day).padStart(2, "0");
+  var timeStr = String(t.hour).padStart(2, "0") + ":" + String(t.minute).padStart(2, "0");
+  CONFIG.logs.unshift({
+    date: dateStr,
+    time: timeStr,
+    user: user,
+    action: action,
+    details: details || ""
+  });
+  if (CONFIG.logs.length > 200) CONFIG.logs = CONFIG.logs.slice(0, 200);
+  saveConfig(CONFIG);
+}
 
 let state = {
   view: "main", step: 0,
