@@ -177,7 +177,8 @@ let state = {
   mixedCalls: "1", mixedChats: "",
   currentUser: null,
   adminLoginUser: "", adminLoginPass: "", adminError: "",
-  newUserName: "", newUserPass: "", newUserRole: "supervisor"
+  newUserName: "", newUserPass: "", newUserRole: "supervisor",
+  pendingPasswordChange: null
 };
 
 function $(s) { return document.querySelector(s); }
