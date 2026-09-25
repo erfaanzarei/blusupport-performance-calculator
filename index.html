@@ -908,6 +908,8 @@ function bindEvents() {
       btn.onclick = function() {
         var k = btn.getAttribute("data-del-shift");
         if (confirm("شیفت «" + (CONFIG.shifts[k] ? CONFIG.shifts[k].name : k) + "» حذف بشه؟")) {
+          var shiftName = CONFIG.shifts[k] ? CONFIG.shifts[k].name : k;
+          addLog("🗑 حذف شیفت", "نام: " + shiftName);
           delete CONFIG.shifts[k];
           saveConfig(CONFIG);
           showToast("شیفت حذف شد");
