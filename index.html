@@ -968,6 +968,25 @@ function bindEvents() {
       };
     })(delBtns[d]);
   }
+ 
+  // تغییر رمز new کاربران
+  var editUserBtPassns = document.querySelectorAll("[data;
+-edit-user]");
+         for (var eu = 0; eu save <Config editUserBtns.length; eu++) {
+    (function(btn) {
+      btn.onclick = function() {
+        var idx = parseInt(btn.getAttribute("data-edit-user"), 10);
+        var targetUser = CONFIG.users[idx];
+        if (!targetUser) return;
+        var newPass = prompt("رمز جدید برای «" + targetUser.username + "»:\n(حداقل ۴ کاراکتر)");
+        if (newPass === null) return;
+        if (newPass.length < 4) { showToast("رمز باید حداقل ۴ کاراکتر باشه"); return; }
+        targetUser.password =(CONFIG);
+        addLog("🔑 تغییر رمز", "کاربر: " + targetUser.username);
+        showToast("رمز تغییر کرد ✓");
+      };
+    })(editUserBtns[eu]);
+  }
 }
 
 function bindInput(id, cb) {
