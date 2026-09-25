@@ -822,13 +822,45 @@ function bindEvents() {
       }
     }
     if (found) {
-      state.currentUser = { username: found.username, role: found.role };
-      state.adminError = "";
-      state.view = "admin";
-      render();
+      if (found.mustChangePassword) {
+        state.pendingPasswordChange = { username: found.username };
+        state.adminLoginUser = u;
+        state.adminLoginPass = "";
+        state.adminError = "";
+        render();
+      } else {
+        state.currentUser = { username: found.username, role: found.role };
+        state.adminError = "";
+        state.view = "admin";
+        render();
+      }
     } else {
       state.adminError = "نام کاربری یا رمز اشتباه است";
       render();
+    }
+  };
+
+  // ذخیره رمز جدید (بار اول)
+  var setPassBtn = document.getElementById("admin-setpass-btn");
+  if (setPassBtn) setPassBtn.onclick = function() {
+    var p1 = document.getElementById("inp-new-pass").value;
+    var p2 = document.getElementById("inp-new-pass-confirm").value;
+    if (!p1 || p1.length < 4) { state.adminError = "رمز باید حداقل ۴ کاراکتر باشه"; render(); return; }
+    if (p1 !== p2) { state.adminError = "رمز و تکرارش یکسان نیستن"; render(); return; }
+    var username = state.pendingPasswordChange.username;
+    for (var i = 0; i < CONFIG.users.length; i++) {
+      if (CONFIG.users[i].username === username) {
+        CONFIG.users[i].password = p1;
+        CONFIG.users[i].mustChangePassword = false;
+        saveConfig(CONFIG);
+        state.currentUser = { username: username, role: CONFIG.users[i].role };
+        state.pendingPasswordChange = null;
+        state.adminError = "";
+        state.view = "admin";
+        addLog("🔑 رمز اولین ورود", "کاربر: " + username);
+        render();
+        return;
+      }
     }
   };
   bindInput("inp-admin-user", function(v) { state.adminLoginUser = v; });
