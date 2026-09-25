@@ -942,7 +942,7 @@ function bindEvents() {
     for (var i = 0; i < CONFIG.users.length; i++) {
       if (CONFIG.users[i].username === u) { showToast("این نام کاربری قبلاً هست"); return; }
     }
-    CONFIG.users.push({ username: u, password: p, role: "supervisor" });
+    CONFIG.users.push({ username: u, password: p, role: "supervisor", mustChangePassword: true });
     saveConfig(CONFIG);
    addLog("➕ سرپرست جدید", "نام کاربری: " + u);
     state.newUserName = "";
