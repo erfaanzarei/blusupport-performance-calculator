@@ -943,6 +943,7 @@ function bindEvents() {
     }
     CONFIG.users.push({ username: u, password: p, role: "supervisor" });
     saveConfig(CONFIG);
+   addLog("➕ سرپرست جدید", "نام کاربری: " + u);
     state.newUserName = "";
     state.newUserPass = "";
     showToast("سرپرست اضافه شد ✓");
@@ -956,6 +957,8 @@ function bindEvents() {
         var idx = parseInt(btn.getAttribute("data-del-user"), 10);
         if (CONFIG.users[idx].role === "owner") { showToast("مالک قابل حذف نیست"); return; }
         if (confirm("کاربر " + CONFIG.users[idx].username + " حذف بشه؟")) {
+          var delUsername = CONFIG.users[idx].username;
+          addLog("🗑 حذف سرپرست", "نام کاربری: " + delUsername);
           CONFIG.users.splice(idx, 1);
           saveConfig(CONFIG);
           showToast("حذف شد");
