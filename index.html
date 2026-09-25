@@ -716,6 +716,23 @@ for (var i = 0; i < keys.length; i++) {
         '<button class="btn" id="add-user-btn" style="margin-top:6px">افزودن سرپرست</button>' +
       '</div>' +
     '</div>' : '') +
+   (isOwner ? '<div class="card">' +
+      '<h2>📋 لاگ تغییرات</h2>' +
+      '<p class="hint">آخرین ۵۰ تغییر تو پنل ادمین.</p>' +
+      (c.logs && c.logs.length ?
+        c.logs.slice(0, 50).map(function(log) {
+          return '<div style="padding:10px 0;border-bottom:1px dashed var(--border)">' +
+            '<div style="display:flex;justify-content:space-between;font-weight:700;font-size:13px;margin-bottom:4px">' +
+              '<span>' + (log.action || '') + '</span>' +
+              '<span style="color:var(--muted);font-weight:400;font-size:11px">' + log.date + ' ' + log.time + '</span>' +
+            '</div>' +
+            (log.details ? '<div style="font-size:12px;color:var(--muted);margin-bottom:4px">' + log.details + '</div>' : '') +
+            '<div style="font-size:11px;color:var(--primary)">👤 ' + log.user + '</div>' +
+          '</div>';
+        }).join('')
+        : '<p class="hint" style="text-align:center">هنوز تغییری ثبت نشده.</p>'
+      ) +
+    '</div>' : '') +
 
     '<div class="btn-row">' +
       '<button class="btn secondary" id="admin-logout">خروج</button>' +
