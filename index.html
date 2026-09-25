@@ -896,6 +896,7 @@ function bindEvents() {
     var newKey = "custom_" + Date.now();
     CONFIG.shifts[newKey] = { name: name, start: start, end: end, crossDay: cross };
     saveConfig(CONFIG);
+   addLog("➕ شیفت جدید", "نام: " + name + " • " + start + " تا " + end);
     showToast("شیفت اضافه شد ✓");
     render();
   };
