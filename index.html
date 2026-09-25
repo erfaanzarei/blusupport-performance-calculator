@@ -671,9 +671,10 @@ for (var i = 0; i < keys.length; i++) {
       var delBtn = uu.role !== "owner"
         ? '<button class="btn danger small" data-del-user="' + u + '">حذف</button>'
         : '';
+      var editPassBtn = '<button class="btn small" data-edit-user="' + u + '" style="background:#eef2ff;color:var(--primary);margin-left:4px">🔑 رمز</button>';
       usersHtml += '<div class="user-item">' +
           '<div class="uname">' + uu.username + ' ' + badge + '</div>' +
-          delBtn +
+          '<div>' + editPassBtn + delBtn + '</div>' +
         '</div>';
     }
   }
