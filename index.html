@@ -874,7 +874,7 @@ function bindEvents() {
         CONFIG.users[i].password = p1;
         CONFIG.users[i].mustChangePassword = false;
         saveConfig(CONFIG);
-        state.currentUser = { username: username, role: CONFIG.users[i].role };
+        state.currentUser = { username: username, role: CONFIG.users[i].role, readOnly: CONFIG.users[i].readOnly === true };
         state.pendingPasswordChange = null;
         state.adminError = "";
         state.view = "admin";
