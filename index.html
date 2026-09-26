@@ -126,10 +126,9 @@ const DEFAULT_CONFIG = {
     midEvening:   { name: "میدل عصر",     start: "18:00", end: "02:00", crossDay: true },
    night:        { name: "بامداد",       start: "00:00", end: "08:00" }
   },
- users: [
-  { username: "e.zarei", password: "Erfan@123", role: "owner" },
-  { username: "blubank", password: "Aa87654321", role: "viewer", readOnly: true }
-],
+  users: [
+    { username: "e.zarei", password: "Erfan@123", role: "owner" }
+  ],
   routes: {
     call:  { label: "فقط تماس",  icon: "📞" },
     chat:  { label: "فقط چت",    icon: "💬" },
@@ -138,7 +137,7 @@ const DEFAULT_CONFIG = {
   logs: []
 };
 
-const LS_KEY = "perf_config_v9";
+const LS_KEY = "perf_config_v8";
 
 function loadConfig() {
   try {
@@ -654,7 +653,6 @@ function renderAdminLogin() {
 function renderAdmin() {
   var c = CONFIG;
   var isOwner = state.currentUser && state.currentUser.role === "owner";
- var isReadOnly = state.currentUser && state.currentUser.readOnly === true;
 
 var shiftsHtml = "";
 var keys = Object.keys(c.shifts);
@@ -694,14 +692,12 @@ for (var i = 0; i < keys.length; i++) {
   '</div>';
 
   var usersHtml = "";
-  if (isOwner && !isReadOnly) {
+  if (isOwner) {
     for (var u = 0; u < c.users.length; u++) {
       var uu = c.users[u];
-var badge = uu.role === "owner"
+      var badge = uu.role === "owner"
         ? '<span class="badge-owner">مالک</span>'
-        : (uu.readOnly
-          ? '<span class="badge-sup" style="background:#fef3c7;color:#92400e">اتوماسیون</span>'
-          : '<span class="badge-sup">سرپرست</span>');
+        : '<span class="badge-sup">سرپرست</span>';
       var delBtn = uu.role !== "owner"
         ? '<button class="btn danger small" data-del-user="' + u + '">حذف</button>'
         : '';
@@ -740,7 +736,7 @@ var badge = uu.role === "owner"
       shiftsHtml +
     '</div>' +
 
-    (((isOwner && !isReadOnly) ? '<div class="card">' +
+    (isOwner ? '<div class="card">' +
       '<h2>👥 مدیریت سرپرستان</h2>' +
       '<p class="hint">فقط مالک می‌تونه کاربر اضافه یا حذف کنه.</p>' +
       usersHtml +
@@ -771,10 +767,10 @@ var badge = uu.role === "owner"
 
     '<div class="btn-row">' +
       '<button class="btn secondary" id="admin-logout">خروج</button>' +
-      (!isReadOnly ? '<button class="btn" id="admin-save">ذخیره ✓</button>' : '') +
+      '<button class="btn" id="admin-save">ذخیره ✓</button>' +
     '</div>' +
 
-    ((isOwner && !isReadOnly) ? '<button class="btn danger" id="admin-reset" style="margin-top:10px">بازگشت به پیش‌فرض</button>' : '');
+    (isOwner ? '<button class="btn danger" id="admin-reset" style="margin-top:10px">بازگشت به پیش‌فرض</button>' : '');
 }
 
 function bindEvents() {
@@ -850,7 +846,7 @@ function bindEvents() {
         state.adminError = "";
         render();
       } else {
-        state.currentUser = { username: found.username, role: found.role, readOnly: found.readOnly === true };
+        state.currentUser = { username: found.username, role: found.role };
         state.adminError = "";
         state.view = "admin";
         render();
@@ -874,7 +870,7 @@ function bindEvents() {
         CONFIG.users[i].password = p1;
         CONFIG.users[i].mustChangePassword = false;
         saveConfig(CONFIG);
-        state.currentUser = { username: username, role: CONFIG.users[i].role, readOnly: CONFIG.users[i].readOnly === true };
+        state.currentUser = { username: username, role: CONFIG.users[i].role };
         state.pendingPasswordChange = null;
         state.adminError = "";
         state.view = "admin";
