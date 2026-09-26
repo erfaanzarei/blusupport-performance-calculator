@@ -771,10 +771,10 @@ var badge = uu.role === "owner"
 
     '<div class="btn-row">' +
       '<button class="btn secondary" id="admin-logout">خروج</button>' +
-      '<button class="btn" id="admin-save">ذخیره ✓</button>' +
+      (!isReadOnly ? '<button class="btn" id="admin-save">ذخیره ✓</button>' : '') +
     '</div>' +
 
-    (isOwner ? '<button class="btn danger" id="admin-reset" style="margin-top:10px">بازگشت به پیش‌فرض</button>' : '');
+    ((isOwner && !isReadOnly) ? '<button class="btn danger" id="admin-reset" style="margin-top:10px">بازگشت به پیش‌فرض</button>' : '');
 }
 
 function bindEvents() {
