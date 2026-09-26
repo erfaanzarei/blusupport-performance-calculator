@@ -654,6 +654,7 @@ function renderAdminLogin() {
 function renderAdmin() {
   var c = CONFIG;
   var isOwner = state.currentUser && state.currentUser.role === "owner";
+ var isReadOnly = state.currentUser && state.currentUser.readOnly === true;
 
 var shiftsHtml = "";
 var keys = Object.keys(c.shifts);
