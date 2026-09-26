@@ -850,7 +850,7 @@ function bindEvents() {
         state.adminError = "";
         render();
       } else {
-        state.currentUser = { username: found.username, role: found.role };
+        state.currentUser = { username: found.username, role: found.role, readOnly: found.readOnly === true };
         state.adminError = "";
         state.view = "admin";
         render();
