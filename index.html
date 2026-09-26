@@ -694,7 +694,7 @@ for (var i = 0; i < keys.length; i++) {
   '</div>';
 
   var usersHtml = "";
-  if (isOwner) {
+  if (isOwner && !isReadOnly) {
     for (var u = 0; u < c.users.length; u++) {
       var uu = c.users[u];
 var badge = uu.role === "owner"
@@ -740,7 +740,7 @@ var badge = uu.role === "owner"
       shiftsHtml +
     '</div>' +
 
-    (isOwner ? '<div class="card">' +
+    (((isOwner && !isReadOnly) ? '<div class="card">' +
       '<h2>👥 مدیریت سرپرستان</h2>' +
       '<p class="hint">فقط مالک می‌تونه کاربر اضافه یا حذف کنه.</p>' +
       usersHtml +
