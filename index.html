@@ -126,9 +126,10 @@ const DEFAULT_CONFIG = {
     midEvening:   { name: "میدل عصر",     start: "18:00", end: "02:00", crossDay: true },
    night:        { name: "بامداد",       start: "00:00", end: "08:00" }
   },
-  users: [
-    { username: "e.zarei", password: "Erfan@123", role: "owner" }
-  ],
+ users: [
+  { username: "e.zarei", password: "Erfan@123", role: "owner" },
+  { username: "blubank", password: "Aa87654321", role: "viewer", readOnly: true }
+],
   routes: {
     call:  { label: "فقط تماس",  icon: "📞" },
     chat:  { label: "فقط چت",    icon: "💬" },
