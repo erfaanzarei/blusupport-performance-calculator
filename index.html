@@ -330,10 +330,9 @@ function computeForecast() {
   }
 
   if (state.route === "chat") {
-    var chatCurrent = toNum(state.chat);
-    var totalNeeded = Math.ceil(r.effectiveTotalSec / chatCost);
-    var additional = Math.max(0, totalNeeded - chatCurrent);
-    return { type: "chat", count: additional };
+    var neededForChat = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
+    var count = Math.ceil(neededForChat / chatCost);
+    return { type: "chat", count: count };
   }
 
   if (state.route === "mixed") {
