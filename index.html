@@ -323,11 +323,10 @@ function computeForecast() {
                + (CONFIG.ticketEscalationRatio * CONFIG.ticketEscalation);
 
   if (state.route === "call") {
-    var callInCurrent = toNum(state.callIn);
-    var totalNeeded = Math.ceil(r.effectiveTotalSec / inCost);
-    var additional = Math.max(0, totalNeeded - callInCurrent);
-    return { type: "call", count: additional };
-  }
+  var neededSec = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
+  var count = Math.ceil(neededSec / inCost);
+  return { type: "call", count: count };
+}
 
   if (state.route === "chat") {
     var neededForChat = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
