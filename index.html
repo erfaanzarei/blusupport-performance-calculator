@@ -111,7 +111,7 @@
 
 <script>
 const DEFAULT_CONFIG = {
-  callIn: 120, callOut: 90, chat: 55,
+  callIn: 125, callOut: 90, chat: 55,
   ticketEscalation: 10, ticketVerbal: 5,
   ticketVerbalRatio: 0.85,
   ticketEscalationRatio: 0.05,
@@ -137,7 +137,7 @@ const DEFAULT_CONFIG = {
   logs: []
 };
 
-const LS_KEY = "perf_config_v8";
+const LS_KEY = "perf_config_v10";
 
 function loadConfig() {
   try {
@@ -485,17 +485,14 @@ function renderResult() {
   else if (r.shiftState === "after")
     shiftAlert = '<div class="alert warn">⏰ شیفتت تموم شده.</div>';
 
-  var statusText = "";
+var statusText = "";
+  var statusSubText = "";
   if (r.perf >= 100) {
     statusText = "🎉 دمت گرم، پرفورمنس روز رو زدی!";
-  } else if (r.perf >= 90) {
-    statusText = "👏 خیلی نزدیک به هدفی — بزن به هدف!";
-  } else if (r.perf >= 85) {
-    statusText = "💪 یه کم مونده — بجنگ!";
-  } else if (r.perf >= 80) {
-    statusText = "⚠️ عقب‌تری — باید جبران کنی";
+    statusSubText = "";
   } else {
-    statusText = "🔴 " + Math.abs(diffPct) + "٪ عقب‌تری";
+    statusText = "✅ " + perfPct + "٪ از ۱۰۰٪ رو زدی";
+    statusSubText = "🔴 " + Math.abs(diffPct) + "٪ مونده تا ۱۰۰٪";
   }
 
   var bonusMessage = "";
@@ -601,6 +598,7 @@ var heroStyle = "";
       '<div class="label">پرفورمنس کل روز</div>' +
       '<div class="pct">' + perfPct + '٪</div>' +
       '<div class="status">' + statusText + '</div>' +
+(statusSubText ? '<div style="font-size:11px;opacity:0.75;margin-top:6px">' + statusSubText + '</div>' : '') +
     '</div>' +
     bonusMessage +
     '<div class="card">' +
