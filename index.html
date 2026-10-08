@@ -524,7 +524,6 @@ function renderMain() {
 
 function renderResult() {
   var r = state.result;
- alert("route=" + state.route + " | callIn=" + state.callIn + " | callOut=" + state.callOut + " | chat=" + state.chat + " | used=" + r.usedSeconds + " | total=" + r.effectiveTotalSec + " | needed=" + (r.effectiveTotalSec - r.usedSeconds));
   if (!r) return '<div class="card"><p>خطا</p></div>';
 
   var perfPct = r.perf.toFixed(1);
