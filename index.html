@@ -1095,6 +1095,20 @@ function onNext() {
     render();
   } else if (state.step === 1) {
     try {
+      // اطمینان از اینکه مقادیر از input ها ست شدن
+      var hEl = document.getElementById("inp-hours");
+      if (hEl) state.hoursPresent = hEl.value;
+      var tEl = document.getElementById("inp-task");
+      if (tEl) state.taskHours = tEl.value;
+      var bEl = document.getElementById("inp-blackout");
+      if (bEl) state.blackoutMin = bEl.value;
+      var ciEl = document.getElementById("inp-call-in");
+      if (ciEl) state.callIn = ciEl.value;
+      var coEl = document.getElementById("inp-call-out");
+      if (coEl) state.callOut = coEl.value;
+      var chEl = document.getElementById("inp-chat");
+      if (chEl) state.chat = chEl.value;
+      
       state.result = computeResult();
       state.view = "result";
       render();
