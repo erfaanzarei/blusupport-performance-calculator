@@ -306,6 +306,59 @@ function computeResult() {
     isCross: isCross
   };
 }
+ function renderForecastOnly() {
+  var r = state.result;
+  if (!r || !state.route) return "";
+  var f = computeForecast();
+  if (!f) return "";
+
+  if (f.type === "done") {
+    return '<div class="target-big done">' +
+        '<div class="lbl">🎉 به هدف رسیدی</div>' +
+        '<div class="num">۱۰۰٪</div>' +
+        '<div class="lbl" style="font-size:12px;opacity:0.9">فقط همین رو حفظ کن</div>' +
+      '</div>';
+  } else if (f.type === "call") {
+    return '<div class="target-big">' +
+        '<div class="lbl">📞 برای رسیدن به ۱۰۰٪</div>' +
+        '<div class="num">' + f.count + '</div>' +
+        '<div class="lbl">تماس ورودی دیگه بزن</div>' +
+        '<div class="sub-note">✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار محاسبه می‌شن</div>' +
+      '</div>';
+  } else if (f.type === "chat") {
+    return '<div class="target-big">' +
+        '<div class="lbl">💬 برای رسیدن به ۱۰۰٪</div>' +
+        '<div class="num">' + f.count + '</div>' +
+        '<div class="lbl">چت دیگه بزن</div>' +
+        '<div class="sub-note">✨ با احتساب تیکت‌های ارجاعی که خودکار محاسبه می‌شن</div>' +
+      '</div>';
+  } else if (f.type === "mixed") {
+    if (f.overshoot) {
+      return '<div class="target-big done">' +
+          '<div class="lbl">🎉 با همین تماس‌ها به هدف می‌رسی</div>' +
+          '<div class="num">' + f.calls + '</div>' +
+          '<div class="lbl">تماس کافیه، چت لازم نیست</div>' +
+          '<div class="sub-note">✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار محاسبه می‌شن</div>' +
+        '</div>';
+    } else {
+      return '<div class="target-big">' +
+          '<div class="lbl">🔀 با ' + f.calls + ' تماس</div>' +
+          '<div class="num">' + f.chats + '</div>' +
+          '<div class="lbl">چت دیگه بزن تا ۱۰۰٪ بشی</div>' +
+          '<div class="sub-note">✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار محاسبه می‌شن</div>' +
+        '</div>';
+    }
+  }
+  return "";
+}
+
+function updateForecastOnly() {
+  var forecastDiv = document.getElementById("forecast-container");
+  if (forecastDiv) {
+    forecastDiv.innerHTML = renderForecastOnly();
+  }
+}
+
 function computeForecast() {
   var r = state.result;
   if (!r || !state.route) return null;
@@ -361,6 +414,7 @@ function render() {
   else if (state.view === "admin")      app.innerHTML = renderAdmin();
   bindEvents();
   updateNav();
+  attachNumericInputs();
 }
 
 function updateNav() {
@@ -521,60 +575,12 @@ if (state.route === "mixed") {
       '<p class="hint">چند تا تماس می‌خوای بزنی؟ سیستم می‌گه چقدر چت لازم داری.</p>' +
       '<div class="field">' +
         '<label>📞 تعداد تماس</label>' +
-        '<input type="number" inputmode="numeric" id="inp-mixed-calls" value="' + state.mixedCalls + '" placeholder="مثلاً ۵۰">' +
+        '<input type="number" inputmode="numeric" id="inp-mixed-calls" value="' + state.mixedCalls + '" placeholder="مثلاً ۵۰" oninput="state.mixedCalls=this.value; updateForecastOnly();">' +
       '</div>' +
     '</div>';
 }
 
-  var forecastHtml = "";
-var f = computeForecast();
-if (f) {
-  if (f.type === "done") {
-    forecastHtml = '<div class="target-big done">' +
-        '<div class="lbl">🎉 به هدف رسیدی</div>' +
-        '<div class="num">۱۰۰٪</div>' +
-        '<div class="lbl" style="font-size:12px;opacity:0.9">فقط همین رو حفظ کن</div>' +
-      '</div>';
-  } else if (f.type === "call") {
-    forecastHtml = '<div class="target-big">' +
-        '<div class="lbl">📞 برای رسیدن به ۱۰۰٪</div>' +
-        '<div class="num">' + f.count + '</div>' +
-        '<div class="lbl">تماس ورودی دیگه بزن</div>' +
-        '<div class="sub-note">' +
-          '✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار محاسبه می‌شن' +
-        '</div>' +
-      '</div>';
-  } else if (f.type === "chat") {
-    forecastHtml = '<div class="target-big">' +
-        '<div class="lbl">💬 برای رسیدن به ۱۰۰٪</div>' +
-        '<div class="num">' + f.count + '</div>' +
-        '<div class="lbl">چت دیگه بزن</div>' +
-        '<div class="sub-note">' +
-          '✨ با احتساب تیکت‌های ارجاعی که خودکار محاسبه می‌شن' +
-        '</div>' +
-      '</div>';
-} else if (f.type === "mixed") {
-  if (f.overshoot) {
-    forecastHtml = '<div class="target-big done">' +
-        '<div class="lbl">🎉 با همین تماس‌ها به هدف می‌رسی</div>' +
-        '<div class="num">' + f.calls + '</div>' +
-        '<div class="lbl">تماس کافیه، چت لازم نیست</div>' +
-        '<div class="sub-note">' +
-          '✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار محاسبه می‌شن' +
-        '</div>' +
-      '</div>';
-  } else {
-    forecastHtml = '<div class="target-big">' +
-        '<div class="lbl">🔀 با ' + f.calls + ' تماس</div>' +
-        '<div class="num">' + f.chats + '</div>' +
-        '<div class="lbl">چت دیگه بزن تا ۱۰۰٪ بشی</div>' +
-        '<div class="sub-note">' +
-          '✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار ثبت می‌شن' +
-        '</div>' +
-      '</div>';
-  }
-}
-}
+  var forecastHtml = '<div id="forecast-container">' + renderForecastOnly() + '</div>';
 
 var heroStyle = "";
   if (r.perf >= 100) {
@@ -770,7 +776,30 @@ for (var i = 0; i < keys.length; i++) {
 
     (isOwner ? '<button class="btn danger" id="admin-reset" style="margin-top:10px">بازگشت به پیش‌فرض</button>' : '');
 }
+ 
+function toEnglishDigits(str) {
+  var persianDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
+  var arabicDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
+  var result = String(str);
+  for (var i = 0; i < 10; i++) {
+    result = result.split(persianDigits[i]).join(i);
+    result = result.split(arabicDigits[i]).join(i);
+  }
+  return result;
+}
 
+function attachNumericInputs() {
+  var inputs = document.querySelectorAll('input[type="number"]');
+  for (var i = 0; i < inputs.length; i++) {
+    (function(inp) {
+      inp.addEventListener('input', function() {
+        var cleaned = toEnglishDigits(inp.value).replace(/[^0-9.]/g, '');
+        if (inp.value !== cleaned) inp.value = cleaned;
+      });
+    })(inputs[i]);
+  }
+}
+ 
 function bindEvents() {
   document.getElementById("nav-main").onclick = function() { state.view = "main"; render(); };
   document.getElementById("nav-admin").onclick = function() {
@@ -799,7 +828,6 @@ function bindEvents() {
   bindInput("inp-call-in", function(v) { state.callIn = v; });
   bindInput("inp-call-out", function(v) { state.callOut = v; });
   bindInput("inp-chat", function(v) { state.chat = v; });
-  bindInput("inp-mixed-calls", function(v) { state.mixedCalls = v; render(); });
 
   var routeBtns = document.querySelectorAll("[data-route]");
   for (var r = 0; r < routeBtns.length; r++) {
