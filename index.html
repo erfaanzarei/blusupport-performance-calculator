@@ -364,9 +364,7 @@ function computeForecast() {
   if (!r || !state.route) return null;
 
   var neededSec = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
-  if (neededSec <= 0 && r.usedSeconds > 0) return { type: "done" };
 
-  // هزینه واقعی هر کنش (با احتساب سهم تیکت‌هاش)
   var inCost = CONFIG.callIn
              + (CONFIG.ticketVerbalRatio * CONFIG.ticketVerbal)
              + (CONFIG.ticketEscalationRatio * CONFIG.ticketEscalation);
@@ -375,33 +373,33 @@ function computeForecast() {
   var chatCost = CONFIG.chat
                + (CONFIG.ticketEscalationRatio * CONFIG.ticketEscalation);
 
+  if (neededSec <= 0) {
+    return { type: "done" };
+  }
+
   if (state.route === "call") {
-  var neededSec = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
-  var count = Math.ceil(neededSec / inCost);
-  return { type: "call", count: count };
-}
+    return { type: "call", count: Math.ceil(neededSec / inCost) };
+  }
 
   if (state.route === "chat") {
-    var neededForChat = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
-    var count = Math.ceil(neededForChat / chatCost);
-    return { type: "chat", count: count };
+    return { type: "chat", count: Math.ceil(neededSec / chatCost) };
   }
 
   if (state.route === "mixed") {
-  var callsWanted = Math.max(0, toNum(state.mixedCalls));
-  if (callsWanted <= 0) return { type: "mixed", calls: 0, chats: 0, overshoot: false };
+    var callsWanted = Math.max(0, toNum(state.mixedCalls));
+    if (callsWanted <= 0) return { type: "mixed", calls: 0, chats: 0, overshoot: false };
 
-  var callsCost = callsWanted * inCost;
+    var callsCost = callsWanted * inCost;
 
-  if (callsCost >= neededSec) {
-    return { type: "mixed", calls: callsWanted, chats: 0, overshoot: true };
+    if (callsCost >= neededSec) {
+      return { type: "mixed", calls: callsWanted, chats: 0, overshoot: true };
+    }
+
+    var remainingAfterCalls = neededSec - callsCost;
+    var chatsNeeded = Math.ceil(remainingAfterCalls / chatCost);
+
+    return { type: "mixed", calls: callsWanted, chats: chatsNeeded, overshoot: false };
   }
-
-  var remainingAfterCalls = neededSec - callsCost;
-  var chatsNeeded = Math.ceil(remainingAfterCalls / chatCost);
-
-  return { type: "mixed", calls: callsWanted, chats: chatsNeeded, overshoot: false };
-}
 
   return null;
 }
