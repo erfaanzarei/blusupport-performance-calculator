@@ -778,12 +778,12 @@ for (var i = 0; i < keys.length; i++) {
 }
  
 function toEnglishDigits(str) {
-  var persianDigits = ['۰','۱','۲','۳','۴','۵','۶','۷','۸','۹'];
-  var arabicDigits = ['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
   var result = String(str);
+  var persianCodes = [1776,1777,1778,1779,1780,1781,1782,1783,1784,1785];
+  var arabicCodes = [1632,1633,1634,1635,1636,1637,1638,1639,1640,1641];
   for (var i = 0; i < 10; i++) {
-    result = result.split(persianDigits[i]).join(i);
-    result = result.split(arabicDigits[i]).join(i);
+    result = result.split(String.fromCharCode(persianCodes[i])).join(i);
+    result = result.split(String.fromCharCode(arabicCodes[i])).join(i);
   }
   return result;
 }
