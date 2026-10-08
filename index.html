@@ -364,7 +364,7 @@ function computeForecast() {
   if (!r || !state.route) return null;
 
   var neededSec = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
-  if (neededSec <= 0) return { type: "done" };
+  if (neededSec <= 0 && r.usedSeconds > 0) return { type: "done" };
 
   // هزینه واقعی هر کنش (با احتساب سهم تیکت‌هاش)
   var inCost = CONFIG.callIn
