@@ -310,6 +310,7 @@ function computeResult() {
   var r = state.result;
   if (!r || !state.route) return "";
   var f = computeForecast();
+  alert("route = " + state.route + "\nneededSec = " + Math.max(0, r.effectiveTotalSec - r.usedSeconds) + "\nusedSec = " + r.usedSeconds + "\ntotalSec = " + r.effectiveTotalSec + "\nf = " + JSON.stringify(f));
   if (!f) return "";
 
   if (f.type === "done") {
