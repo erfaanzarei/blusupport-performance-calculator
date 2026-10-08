@@ -491,7 +491,7 @@ var statusText = "";
     statusText = "🎉 دمت گرم، پرفورمنس روز رو زدی!";
     statusSubText = "";
   } else {
-    statusText = "🔴 " + Math.abs(diffPct) + "٪ مونده تا ۱۰۰٪";
+    statusText = "🔴 منفی " + Math.abs(diffPct) + "٪";
     statusSubText = "✅ " + perfPct + "٪ از ۱۰۰٪ رو زدی";
   }
 
@@ -595,10 +595,10 @@ var heroStyle = "";
     '</div>' +
     shiftAlert +
     '<div class="result-hero" style="' + heroStyle + '">' +
+      (statusText ? '<div style="font-size:17px;font-weight:800;margin-bottom:14px">' + statusText + '</div>' : '') +
       '<div class="label">پرفورمنس کل روز</div>' +
       '<div class="pct">' + perfPct + '٪</div>' +
-      '<div class="status">' + statusText + '</div>' +
-(statusSubText ? '<div style="font-size:11px;opacity:0.75;margin-top:6px">' + statusSubText + '</div>' : '') +
+      (statusSubText ? '<div style="font-size:11px;opacity:0.7;margin-top:10px">' + statusSubText + '</div>' : '') +
     '</div>' +
     bonusMessage +
     '<div class="card">' +
