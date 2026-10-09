@@ -364,7 +364,9 @@ function computeForecast() {
   if (!r || !state.route) return null;
 
   var neededSec = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
+  if (neededSec <= 0) return { type: "done" };
 
+  // هزینه واقعی هر کنش (با احتساب سهم تیکت‌هاش)
   var inCost = CONFIG.callIn
              + (CONFIG.ticketVerbalRatio * CONFIG.ticketVerbal)
              + (CONFIG.ticketEscalationRatio * CONFIG.ticketEscalation);
@@ -373,33 +375,33 @@ function computeForecast() {
   var chatCost = CONFIG.chat
                + (CONFIG.ticketEscalationRatio * CONFIG.ticketEscalation);
 
-  if (neededSec <= 0) {
-    return { type: "done" };
-  }
-
   if (state.route === "call") {
-    return { type: "call", count: Math.ceil(neededSec / inCost) };
-  }
+  var neededSec = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
+  var count = Math.ceil(neededSec / inCost);
+  return { type: "call", count: count };
+}
 
   if (state.route === "chat") {
-    return { type: "chat", count: Math.ceil(neededSec / chatCost) };
+    var neededForChat = Math.max(0, r.effectiveTotalSec - r.usedSeconds);
+    var count = Math.ceil(neededForChat / chatCost);
+    return { type: "chat", count: count };
   }
 
   if (state.route === "mixed") {
-    var callsWanted = Math.max(0, toNum(state.mixedCalls));
-    if (callsWanted <= 0) return { type: "mixed", calls: 0, chats: 0, overshoot: false };
+  var callsWanted = Math.max(0, toNum(state.mixedCalls));
+  if (callsWanted <= 0) return { type: "mixed", calls: 0, chats: 0, overshoot: false };
 
-    var callsCost = callsWanted * inCost;
+  var callsCost = callsWanted * inCost;
 
-    if (callsCost >= neededSec) {
-      return { type: "mixed", calls: callsWanted, chats: 0, overshoot: true };
-    }
-
-    var remainingAfterCalls = neededSec - callsCost;
-    var chatsNeeded = Math.ceil(remainingAfterCalls / chatCost);
-
-    return { type: "mixed", calls: callsWanted, chats: chatsNeeded, overshoot: false };
+  if (callsCost >= neededSec) {
+    return { type: "mixed", calls: callsWanted, chats: 0, overshoot: true };
   }
+
+  var remainingAfterCalls = neededSec - callsCost;
+  var chatsNeeded = Math.ceil(remainingAfterCalls / chatCost);
+
+  return { type: "mixed", calls: callsWanted, chats: chatsNeeded, overshoot: false };
+}
 
   return null;
 }
@@ -1095,20 +1097,6 @@ function onNext() {
     render();
   } else if (state.step === 1) {
     try {
-      // اطمینان از اینکه مقادیر از input ها ست شدن
-      var hEl = document.getElementById("inp-hours");
-      if (hEl) state.hoursPresent = hEl.value;
-      var tEl = document.getElementById("inp-task");
-      if (tEl) state.taskHours = tEl.value;
-      var bEl = document.getElementById("inp-blackout");
-      if (bEl) state.blackoutMin = bEl.value;
-      var ciEl = document.getElementById("inp-call-in");
-      if (ciEl) state.callIn = ciEl.value;
-      var coEl = document.getElementById("inp-call-out");
-      if (coEl) state.callOut = coEl.value;
-      var chEl = document.getElementById("inp-chat");
-      if (chEl) state.chat = chEl.value;
-      
       state.result = computeResult();
       state.view = "result";
       render();
