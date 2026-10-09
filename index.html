@@ -306,59 +306,6 @@ function computeResult() {
     isCross: isCross
   };
 }
- function renderForecastOnly() {
-  var r = state.result;
-  if (!r || !state.route) return "";
-  var f = computeForecast();
-  if (!f) return "";
-
-  if (f.type === "done") {
-    return '<div class="target-big done">' +
-        '<div class="lbl">🎉 به هدف رسیدی</div>' +
-        '<div class="num">۱۰۰٪</div>' +
-        '<div class="lbl" style="font-size:12px;opacity:0.9">فقط همین رو حفظ کن</div>' +
-      '</div>';
-  } else if (f.type === "call") {
-    return '<div class="target-big">' +
-        '<div class="lbl">📞 برای رسیدن به ۱۰۰٪</div>' +
-        '<div class="num">' + f.count + '</div>' +
-        '<div class="lbl">تماس ورودی دیگه بزن</div>' +
-        '<div class="sub-note">✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار محاسبه می‌شن</div>' +
-      '</div>';
-  } else if (f.type === "chat") {
-    return '<div class="target-big">' +
-        '<div class="lbl">💬 برای رسیدن به ۱۰۰٪</div>' +
-        '<div class="num">' + f.count + '</div>' +
-        '<div class="lbl">چت دیگه بزن</div>' +
-        '<div class="sub-note">✨ با احتساب تیکت‌های ارجاعی که خودکار محاسبه می‌شن</div>' +
-      '</div>';
-  } else if (f.type === "mixed") {
-    if (f.overshoot) {
-      return '<div class="target-big done">' +
-          '<div class="lbl">🎉 با همین تماس‌ها به هدف می‌رسی</div>' +
-          '<div class="num">' + f.calls + '</div>' +
-          '<div class="lbl">تماس کافیه، چت لازم نیست</div>' +
-          '<div class="sub-note">✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار محاسبه می‌شن</div>' +
-        '</div>';
-    } else {
-      return '<div class="target-big">' +
-          '<div class="lbl">🔀 با ' + f.calls + ' تماس</div>' +
-          '<div class="num">' + f.chats + '</div>' +
-          '<div class="lbl">چت دیگه بزن تا ۱۰۰٪ بشی</div>' +
-          '<div class="sub-note">✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار محاسبه می‌شن</div>' +
-        '</div>';
-    }
-  }
-  return "";
-}
-
-function updateForecastOnly() {
-  var forecastDiv = document.getElementById("forecast-container");
-  if (forecastDiv) {
-    forecastDiv.innerHTML = renderForecastOnly();
-  }
-}
-
 function computeForecast() {
   var r = state.result;
   if (!r || !state.route) return null;
@@ -414,7 +361,6 @@ function render() {
   else if (state.view === "admin")      app.innerHTML = renderAdmin();
   bindEvents();
   updateNav();
-  attachNumericInputs();
 }
 
 function updateNav() {
@@ -456,7 +402,7 @@ function renderMain() {
 '<p class="hint">امروز چقدر شیفت هستی؟</p>' +
         '<div class="field">' +
           '<label>ساعت حضور (ساعت)</label>' +
-          '<input type="text" inputmode="decimal" step="0.25" id="inp-hours" value="' + esc(state.hoursPresent) + '" placeholder="8">' +
+          '<input type="number" inputmode="decimal" step="0.25" id="inp-hours" value="' + esc(state.hoursPresent) + '" placeholder="8">' +
         '</div>' +
       '</div>' +
       '<div class="card">' +
@@ -465,11 +411,11 @@ function renderMain() {
         '<div class="grid2">' +
           '<div class="field">' +
             '<label>تسک جانبی (ساعت)</label>' +
-            '<input type="text" inputmode="decimal" step="0.25" id="inp-task" value="' + esc(state.taskHours) + '" placeholder="0">' +
+            '<input type="number" inputmode="decimal" step="0.25" id="inp-task" value="' + esc(state.taskHours) + '" placeholder="0">' +
           '</div>' +
           '<div class="field">' +
             '<label>قطعی 🔴 (دقیقه)</label>' +
-            '<input type="text" inputmode="numeric" step="1" id="inp-blackout" value="' + esc(state.blackoutMin) + '" placeholder="0">' +
+            '<input type="number" inputmode="numeric" step="1" id="inp-blackout" value="' + esc(state.blackoutMin) + '" placeholder="0">' +
           '</div>' +
         '</div>' +
         '<small style="color:var(--muted);font-size:11px">این‌ها مستقیم از زمان حضور کم میشن.</small>' +
@@ -487,16 +433,16 @@ function renderMain() {
         '<div class="grid2">' +
           '<div class="field">' +
             '<label>📞 تماس ورودی</label>' +
-            '<input type="text" inputmode="numeric" id="inp-call-in" value="' + esc(state.callIn) + '" placeholder="0">' +
+            '<input type="number" inputmode="numeric" id="inp-call-in" value="' + esc(state.callIn) + '" placeholder="0">' +
           '</div>' +
           '<div class="field">' +
             '<label>📞 تماس خروجی</label>' +
-            '<input type="text" inputmode="numeric" id="inp-call-out" value="' + esc(state.callOut) + '" placeholder="0">' +
+            '<input type="number" inputmode="numeric" id="inp-call-out" value="' + esc(state.callOut) + '" placeholder="0">' +
           '</div>' +
         '</div>' +
         '<div class="field">' +
           '<label>💬 چت</label>' +
-          '<input type="text" inputmode="numeric" id="inp-chat" value="' + esc(state.chat) + '" placeholder="0">' +
+          '<input type="number" inputmode="numeric" id="inp-chat" value="' + esc(state.chat) + '" placeholder="0">' +
         '</div>' +
         '<div class="ticket-info">' +
           '🎫 تیکت‌های شفاهی و ارجاعی بر اساس تعداد تماس و چتت <b>خودکار</b> حساب میشن و تو پرفورمنست لحاظ می‌شن.' +
@@ -575,12 +521,60 @@ if (state.route === "mixed") {
       '<p class="hint">چند تا تماس می‌خوای بزنی؟ سیستم می‌گه چقدر چت لازم داری.</p>' +
       '<div class="field">' +
         '<label>📞 تعداد تماس</label>' +
-        '<input type="text" inputmode="numeric" id="inp-mixed-calls" value="' + state.mixedCalls + '" placeholder="مثلاً ۵۰" oninput="state.mixedCalls=this.value; updateForecastOnly();">' +
+        '<input type="number" inputmode="numeric" id="inp-mixed-calls" value="' + state.mixedCalls + '" placeholder="مثلاً ۵۰">' +
       '</div>' +
     '</div>';
 }
 
-  var forecastHtml = '<div id="forecast-container">' + renderForecastOnly() + '</div>';
+  var forecastHtml = "";
+var f = computeForecast();
+if (f) {
+  if (f.type === "done") {
+    forecastHtml = '<div class="target-big done">' +
+        '<div class="lbl">🎉 به هدف رسیدی</div>' +
+        '<div class="num">۱۰۰٪</div>' +
+        '<div class="lbl" style="font-size:12px;opacity:0.9">فقط همین رو حفظ کن</div>' +
+      '</div>';
+  } else if (f.type === "call") {
+    forecastHtml = '<div class="target-big">' +
+        '<div class="lbl">📞 برای رسیدن به ۱۰۰٪</div>' +
+        '<div class="num">' + f.count + '</div>' +
+        '<div class="lbl">تماس ورودی دیگه بزن</div>' +
+        '<div class="sub-note">' +
+          '✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار محاسبه می‌شن' +
+        '</div>' +
+      '</div>';
+  } else if (f.type === "chat") {
+    forecastHtml = '<div class="target-big">' +
+        '<div class="lbl">💬 برای رسیدن به ۱۰۰٪</div>' +
+        '<div class="num">' + f.count + '</div>' +
+        '<div class="lbl">چت دیگه بزن</div>' +
+        '<div class="sub-note">' +
+          '✨ با احتساب تیکت‌های ارجاعی که خودکار محاسبه می‌شن' +
+        '</div>' +
+      '</div>';
+} else if (f.type === "mixed") {
+  if (f.overshoot) {
+    forecastHtml = '<div class="target-big done">' +
+        '<div class="lbl">🎉 با همین تماس‌ها به هدف می‌رسی</div>' +
+        '<div class="num">' + f.calls + '</div>' +
+        '<div class="lbl">تماس کافیه، چت لازم نیست</div>' +
+        '<div class="sub-note">' +
+          '✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار محاسبه می‌شن' +
+        '</div>' +
+      '</div>';
+  } else {
+    forecastHtml = '<div class="target-big">' +
+        '<div class="lbl">🔀 با ' + f.calls + ' تماس</div>' +
+        '<div class="num">' + f.chats + '</div>' +
+        '<div class="lbl">چت دیگه بزن تا ۱۰۰٪ بشی</div>' +
+        '<div class="sub-note">' +
+          '✨ با احتساب تیکت‌های شفاهی و ارجاعی که خودکار ثبت می‌شن' +
+        '</div>' +
+      '</div>';
+  }
+}
+}
 
 var heroStyle = "";
   if (r.perf >= 100) {
@@ -718,20 +712,20 @@ for (var i = 0; i < keys.length; i++) {
     '<div class="card">' +
       '<h2>ثانیه‌های هر کنش</h2>' +
       '<div class="grid2">' +
-        '<div class="field"><label>تماس ورودی</label><input type="text" id="cfg-callIn" value="' + c.callIn + '"></div>' +
-        '<div class="field"><label>تماس خروجی</label><input type="text" id="cfg-callOut" value="' + c.callOut + '"></div>' +
-        '<div class="field"><label>چت</label><input type="text" id="cfg-chat" value="' + c.chat + '"></div>' +
-        '<div class="field"><label>تیکت ارجاعی</label><input type="text" id="cfg-te" value="' + c.ticketEscalation + '"></div>' +
-        '<div class="field"><label>تیکت شفاهی</label><input type="text" id="cfg-tv" value="' + c.ticketVerbal + '"></div>' +
-        '<div class="field"><label>ضریب (factor)</label><input type="text" step="0.001" id="cfg-factor" value="' + c.factor + '"></div>' +
+        '<div class="field"><label>تماس ورودی</label><input type="number" id="cfg-callIn" value="' + c.callIn + '"></div>' +
+        '<div class="field"><label>تماس خروجی</label><input type="number" id="cfg-callOut" value="' + c.callOut + '"></div>' +
+        '<div class="field"><label>چت</label><input type="number" id="cfg-chat" value="' + c.chat + '"></div>' +
+        '<div class="field"><label>تیکت ارجاعی</label><input type="number" id="cfg-te" value="' + c.ticketEscalation + '"></div>' +
+        '<div class="field"><label>تیکت شفاهی</label><input type="number" id="cfg-tv" value="' + c.ticketVerbal + '"></div>' +
+        '<div class="field"><label>ضریب (factor)</label><input type="number" step="0.001" id="cfg-factor" value="' + c.factor + '"></div>' +
       '</div>' +
     '</div>' +
 
     '<div class="card">' +
       '<h2>نسبت تیکت‌ها</h2>' +
       '<div class="grid2">' +
-        '<div class="field"><label>ضریب تیکت شفاهی</label><input type="text" step="0.01" id="cfg-tvRatio" value="' + c.ticketVerbalRatio + '"><small>پیش‌فرض 0.85</small></div>' +
-        '<div class="field"><label>ضریب تیکت ارجاعی</label><input type="text" step="0.01" id="cfg-teRatio" value="' + c.ticketEscalationRatio + '"><small>پیش‌فرض 0.05</small></div>' +
+        '<div class="field"><label>ضریب تیکت شفاهی</label><input type="number" step="0.01" id="cfg-tvRatio" value="' + c.ticketVerbalRatio + '"><small>پیش‌فرض 0.85</small></div>' +
+        '<div class="field"><label>ضریب تیکت ارجاعی</label><input type="number" step="0.01" id="cfg-teRatio" value="' + c.ticketEscalationRatio + '"><small>پیش‌فرض 0.05</small></div>' +
       '</div>' +
     '</div>' +
 
@@ -776,30 +770,7 @@ for (var i = 0; i < keys.length; i++) {
 
     (isOwner ? '<button class="btn danger" id="admin-reset" style="margin-top:10px">بازگشت به پیش‌فرض</button>' : '');
 }
- 
-function toEnglishDigits(str) {
-  var result = String(str);
-  var persianCodes = [1776,1777,1778,1779,1780,1781,1782,1783,1784,1785];
-  var arabicCodes = [1632,1633,1634,1635,1636,1637,1638,1639,1640,1641];
-  for (var i = 0; i < 10; i++) {
-    result = result.split(String.fromCharCode(persianCodes[i])).join(i);
-    result = result.split(String.fromCharCode(arabicCodes[i])).join(i);
-  }
-  return result;
-}
 
-function attachNumericInputs() {
-  var inputs = document.querySelectorAll('input[inputmode="numeric"], input[inputmode="decimal"]');
-  for (var i = 0; i < inputs.length; i++) {
-    (function(inp) {
-      inp.addEventListener('input', function() {
-        var cleaned = toEnglishDigits(inp.value).replace(/[^0-9.]/g, '');
-        if (inp.value !== cleaned) inp.value = cleaned;
-      });
-    })(inputs[i]);
-  }
-}
- 
 function bindEvents() {
   document.getElementById("nav-main").onclick = function() { state.view = "main"; render(); };
   document.getElementById("nav-admin").onclick = function() {
@@ -828,6 +799,7 @@ function bindEvents() {
   bindInput("inp-call-in", function(v) { state.callIn = v; });
   bindInput("inp-call-out", function(v) { state.callOut = v; });
   bindInput("inp-chat", function(v) { state.chat = v; });
+  bindInput("inp-mixed-calls", function(v) { state.mixedCalls = v; render(); });
 
   var routeBtns = document.querySelectorAll("[data-route]");
   for (var r = 0; r < routeBtns.length; r++) {
